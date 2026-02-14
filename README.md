@@ -58,8 +58,26 @@ import agentlog
 # Automatic failure capture — locals at crash point
 # Nothing to instrument, just enable and go
 
-# After a crash, export context for your AI agent:
-context = agentlog.get_debug_context()
+# After a crash, get an automatic fix in one shot:
+code, explanation = agentlog.fix_this_crash()
+```
+
+### 🎯 The 10X Features
+
+**Fix crashes in one shot instead of 5 attempts:**
+
+```python
+# One-shot crash fixer ⭐
+code, explanation = agentlog.fix_this_crash()
+# Returns: validated fix code + explanation
+
+# Multi-agent cascade visualizer 🌊  
+flow = agentlog.visualize_agent_flow()
+# Shows: Agent A → Agent B → Error in Agent C
+
+# Regression validator ✅
+result = agentlog.validate_refactoring("baseline", "new")
+# Returns: safe_to_merge, confidence_score, blocking_issues
 ```
 
 ### Session Tracking
@@ -147,6 +165,17 @@ Every value is described with a compact schema optimized for token efficiency:
 - **Complex data pipelines** — tensor shapes, dict keys, list lengths; structured not stringified
 
 ## API Reference
+
+### 🎯 Clear Winner Features (10X Improvements)
+
+| Function | Purpose |
+|----------|---------|
+| `fix_this_crash()` | **One-shot crash fixer** — detect pattern, generate fix, reduce iterations from 5→1 |
+| `visualize_agent_flow()` | **Multi-agent debugger** — show cascade: Agent A → Agent B → Error |
+| `validate_refactoring()` | **Regression validator** — opinionated safe/unsafe decision with confidence score |
+| `quick_validate()` | **Quick regression check** — returns "SAFE", "CAUTION", "REVIEW", or "UNSAFE" |
+
+### Core API
 
 | Function | Purpose |
 |----------|---------|
