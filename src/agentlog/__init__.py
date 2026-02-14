@@ -40,12 +40,12 @@ from ._core import (
     is_enabled,
 )
 
-# Session management (Phase 1)
+# Session management
 from ._session import (
     start_session,
     end_session,
     get_session_id,
-    get_parent_session_id,  # Phase 2: Session linking
+    get_parent_session_id,
 )
 
 # Core logging API
@@ -78,7 +78,7 @@ from ._advanced import (
     log_perf,
 )
 
-# Agent workflow optimization (Phase 2)
+# Agent workflow optimization
 from ._agent import (
     log_llm_call,
     log_tool_call,
@@ -88,7 +88,7 @@ from ._agent import (
     tool_call,
 )
 
-# Schema validation and exports (Phase 3)
+# Schema validation and exports
 from ._schema import (
     validate_entry,
     validate_value_descriptor,
@@ -98,7 +98,7 @@ from ._schema import (
     validate_jsonl_file,
 )
 
-# Framework adapters (Phase 3)
+# Framework adapters
 from ._adapters import (
     fastapi_middleware,
     flask_before_request,
@@ -131,7 +131,7 @@ from ._failure import (
     uninstall_failure_hook,
 )
 
-# Phase 2: Cross-run correlation
+# Cross-run correlation
 from ._correlation import (
     hash_error,
     record_error_pattern,
@@ -142,7 +142,7 @@ from ._correlation import (
     get_pattern_stats,
 )
 
-# Phase 2: Workspace state snapshots
+# Workspace state snapshots
 from ._workspace import (
     snapshot_workspace,
     compare_snapshots,
@@ -153,7 +153,7 @@ from ._workspace import (
     hash_file,
 )
 
-# Phase 3: Evaluation & Outcome Tagging
+# Evaluation & Outcome Tagging
 from ._outcome import (
     tag_outcome,
     tag_session_outcome,
@@ -168,7 +168,7 @@ from ._outcome import (
     OUTCOME_UNKNOWN,
 )
 
-# Phase 3: Regression Detection
+# Regression Detection
 from ._regression import (
     set_baseline,
     get_baseline,
@@ -179,7 +179,7 @@ from ._regression import (
     generate_regression_report,
 )
 
-# Phase 4: Structured Output Templates
+# Structured Output Templates
 from ._formats import (
     get_formatted_context,
     list_formats,
@@ -188,7 +188,7 @@ from ._formats import (
     to_mcp_tool_result,
 )
 
-# Phase 4: OpenTelemetry Bridge
+# OpenTelemetry Bridge
 from ._otel import (
     to_otlp_logs,
     to_otlp_spans,
@@ -197,7 +197,7 @@ from ._otel import (
     export_spans_json,
 )
 
-# Phase 4: MCP Server
+# MCP Server
 from ._mcp import (
     run_mcp_server,
     mcp_entry,
@@ -207,7 +207,7 @@ from ._mcp import (
     handle_call_tool,
 )
 
-# Phase 4: Remote Sync (Optional D1)
+# Remote Sync (Optional D1)
 from ._remote import (
     is_d1_enabled,
     init_d1_schema,
@@ -219,7 +219,7 @@ from ._remote import (
     import_shared_session,
 )
 
-# Phase 5: Intelligent Context Pruning
+# Intelligent Context Pruning
 from ._prune import (
     prune_context,
     compress_context,
@@ -228,7 +228,7 @@ from ._prune import (
     summarize_entries,
 )
 
-# Phase 5: Visual Diff Rendering
+# Visual Diff Rendering
 from ._visual import (
     render_git_diff,
     render_session_diff,
@@ -238,7 +238,7 @@ from ._visual import (
     render_diff_html,
 )
 
-# Phase 5: Team Analytics
+# Team Analytics
 from ._analytics import (
     record_session_analytics,
     get_team_stats,
@@ -285,7 +285,7 @@ __all__ = [
     "start_session",
     "end_session",
     "get_session_id",
-    "get_parent_session_id",  # Phase 2
+    "get_parent_session_id",
     # Core API
     "log",
     "log_vars",
@@ -319,7 +319,7 @@ __all__ = [
     # Automatic failure capture
     "install_failure_hook",
     "uninstall_failure_hook",
-    # Phase 2: Cross-run correlation
+    # Cross-run correlation
     "hash_error",
     "record_error_pattern",
     "get_error_pattern",
@@ -327,7 +327,7 @@ __all__ = [
     "find_similar_errors",
     "correlate_error",
     "get_pattern_stats",
-    # Phase 2: Workspace snapshots
+    # Workspace snapshots
     "snapshot_workspace",
     "compare_snapshots",
     "save_snapshot",
@@ -335,7 +335,7 @@ __all__ = [
     "snapshot_session",
     "compare_to_session_baseline",
     "hash_file",
-    # Phase 3: Evaluation & Outcomes
+    # Evaluation & Outcomes
     "tag_outcome",
     "tag_session_outcome",
     "get_outcome",
@@ -347,7 +347,7 @@ __all__ = [
     "OUTCOME_FAILURE",
     "OUTCOME_PARTIAL",
     "OUTCOME_UNKNOWN",
-    # Phase 3: Regression Detection
+    # Regression Detection
     "set_baseline",
     "get_baseline",
     "list_baselines",
@@ -355,39 +355,39 @@ __all__ = [
     "detect_regression",
     "compare_to_baseline",
     "generate_regression_report",
-    # Phase 4: Structured Output Templates
+    # Structured Output Templates
     "get_formatted_context",
     "list_formats",
     "get_format_description",
     "to_mcp_resource",
     "to_mcp_tool_result",
-    # Phase 4: OpenTelemetry Bridge
+    # OpenTelemetry Bridge
     "to_otlp_logs",
     "to_otlp_spans",
     "export_otlp_json",
     "export_spans_json",
-    # Phase 4: MCP Server
+    # MCP Server
     "run_mcp_server",
     "mcp_entry",
-    # Phase 4: Remote Sync
+    # Remote Sync
     "is_d1_enabled",
     "sync_session_to_d1",
     "load_session_from_d1",
     "list_d1_sessions",
     "share_session",
     "import_shared_session",
-    # Phase 5: Intelligent Context Pruning
+    # Intelligent Context Pruning
     "prune_context",
     "compress_context",
     "get_context_summary",
     "score_entry_importance",
     "summarize_entries",
-    # Phase 5: Visual Diff Rendering
+    # Visual Diff Rendering
     "render_git_diff",
     "render_session_diff",
     "get_diff_summary",
     "export_diff_for_review",
-    # Phase 5: Team Analytics
+    # Team Analytics
     "record_session_analytics",
     "get_team_stats",
     "get_error_trends",
@@ -397,30 +397,30 @@ __all__ = [
     "generate_team_report",
     "export_analytics",
     "clear_analytics",
-    # Clear Winner Feature 1: One-Shot Crash Fixer ⭐
+    # One-Shot Crash Fixer ⭐
     "fix_this_crash",
     "analyze_crash",
-    # Clear Winner Feature 2: Multi-Agent Flow Visualizer 🌊
+    # Multi-Agent Flow Visualizer 🌊
     "visualize_agent_flow",
     "get_cascade_summary",
-    # Clear Winner Feature 3: Regression Validator ✅
+    # Regression Validator ✅
     "validate_refactoring",
     "quick_validate",
-    # Agent workflow (Phase 2)
+    # Agent workflow
     "log_llm_call",
     "log_tool_call",
     "log_prompt",
     "log_response",
     "llm_call",
     "tool_call",
-    # Schema validation (Phase 3)
+    # Schema validation
     "validate_entry",
     "validate_value_descriptor",
     "export_schema_json",
     "export_schema_typescript",
     "export_schema_go",
     "validate_jsonl_file",
-    # Framework adapters (Phase 3)
+    # Framework adapters
     "fastapi_middleware",
     "flask_before_request",
     "flask_after_request",

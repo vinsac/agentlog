@@ -1,7 +1,7 @@
 """
 Workspace state snapshots for agentlog.
 
-Lightweight file hash tracking for Phase 2 cross-run correlation.
+Lightweight file hash tracking for cross-run correlation.
 Helps agents know what files existed when an error occurred.
 """
 

@@ -1,5 +1,5 @@
 """
-Structured output templates for agentlog (Phase 4).
+Structured output templates for agentlog.
 
 Export formats optimized for specific agent tools' context windows and prompt styles.
 """

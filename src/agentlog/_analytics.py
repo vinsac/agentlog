@@ -1,5 +1,5 @@
 """
-Team analytics for agentlog (Phase 5).
+Team analytics for agentlog.
 
 Aggregate debugging patterns across team sessions.
 """

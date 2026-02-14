@@ -1,5 +1,5 @@
 """
-Remote sync for agentlog (Phase 4) - Optional Cloudflare D1 integration.
+Remote sync for agentlog - Optional Cloudflare D1 integration.
 
 Provides team sharing of debugging context via Cloudflare D1 database.
 This is optional - core functionality remains local-first.

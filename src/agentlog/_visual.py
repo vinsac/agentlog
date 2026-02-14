@@ -1,5 +1,5 @@
 """
-Visual diff rendering for agentlog (Phase 5).
+Visual diff rendering for agentlog.
 
 Renders code changes in human-readable format for non-technical review.
 """

@@ -1,5 +1,5 @@
 """
-MCP (Model Context Protocol) server for agentlog (Phase 4).
+MCP (Model Context Protocol) server for agentlog.
 
 Provides native integration with Cursor, Claude Desktop, and other MCP clients.
 """
@@ -377,7 +377,7 @@ def run_mcp_server():
 # ---------------------------------------------------------------------------
 
 def mcp_entry():
-    """Entry point for `agentlog mcp` command."""
+    """MCP server entry point."""
     run_mcp_server()
 
 

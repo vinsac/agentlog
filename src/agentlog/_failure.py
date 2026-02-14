@@ -67,7 +67,7 @@ def _capture_failure(exc_type, exc_value, exc_traceback):
         if session_id:
             error_data["session_id"] = session_id
         
-        # Record error pattern for cross-run correlation (Phase 2)
+        # Record error pattern for cross-run correlation
         try:
             from ._correlation import record_error_pattern
             record_error_pattern(

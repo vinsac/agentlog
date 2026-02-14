@@ -1,5 +1,5 @@
 """
-Tests for schema validation and exports (Phase 3).
+Tests for schema validation and exports.
 """
 
 import json
@@ -188,18 +188,18 @@ def test_export_schema_json():
 
 
 def test_export_schema_json_has_all_tags():
-    """Test that JSON schema includes all Phase 1-3 tags."""
+    """Test that JSON schema includes all core and workflow tags."""
     schema_json = export_schema_json()
     schema = json.loads(schema_json)
     
     tags = schema["tags"]
     
-    # Phase 1 tags
+    # Core tags
     assert "error" in tags
     assert "decision" in tags
     assert "flow" in tags
     
-    # Phase 2 tags
+    # Agent workflow tags
     assert "llm" in tags
     assert "tool" in tags
     assert "prompt" in tags

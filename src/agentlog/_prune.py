@@ -1,5 +1,5 @@
 """
-Intelligent context pruning for agentlog (Phase 5).
+Intelligent context pruning for agentlog.
 
 AI-powered log summarization to fit within token budgets.
 Uses heuristics to identify and preserve the most important information.

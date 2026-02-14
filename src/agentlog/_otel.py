@@ -1,5 +1,5 @@
 """
-OpenTelemetry bridge for agentlog (Phase 4).
+OpenTelemetry bridge for agentlog.
 
 Export logs to OpenTelemetry format for integration with existing observability stacks.
 """

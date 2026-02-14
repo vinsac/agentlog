@@ -91,7 +91,7 @@ def get_context_smart(
     """
     Smart context export with importance filtering and compression.
     
-    Phase 2 enhancement: Filters by importance before fitting to token budget.
+    Enhancement: Filters by importance before fitting to token budget.
     
     Args:
         max_tokens: Token budget

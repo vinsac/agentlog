@@ -1,5 +1,5 @@
 """
-Tests for workspace snapshot module (Phase 2).
+Tests for workspace snapshot module.
 """
 
 import pytest

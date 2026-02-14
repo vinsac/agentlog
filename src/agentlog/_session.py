@@ -19,7 +19,7 @@ def start_session(agent_name: str, task: str, parent_session_id: Optional[str] =
     Args:
         agent_name: Name of the agent (e.g., "coding-agent").
         task: Description of the task being performed.
-        parent_session_id: Optional parent session for tracking related work (Phase 2).
+        parent_session_id: Optional parent session for tracking related work.
         
     Returns:
         The generated session ID.
@@ -63,7 +63,7 @@ def get_session_id() -> Optional[str]:
 
 
 def get_parent_session_id() -> Optional[str]:
-    """Get the parent session ID for linked sessions (Phase 2)."""
+    """Get the parent session ID for linked sessions."""
     return _core._parent_session_id
 
 

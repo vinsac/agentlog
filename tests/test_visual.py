@@ -1,5 +1,5 @@
 """
-Tests for visual diff rendering module (Phase 5).
+Tests for visual diff rendering module.
 """
 
 import pytest

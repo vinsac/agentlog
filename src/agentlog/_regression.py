@@ -1,5 +1,5 @@
 """
-Regression detection for agentlog (Phase 3).
+Regression detection for agentlog.
 
 Compare current run to baseline sessions to catch introduced bugs.
 Helps agents identify when their changes broke something.

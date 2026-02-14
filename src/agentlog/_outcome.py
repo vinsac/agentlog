@@ -1,5 +1,5 @@
 """
-Outcome tagging system for agentlog (Phase 3).
+Outcome tagging system for agentlog.
 
 Enables manual or heuristic success/failure tagging to build evaluation datasets.
 Helps agents track what worked and what didn't.
