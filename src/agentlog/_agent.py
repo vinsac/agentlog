@@ -13,6 +13,10 @@ from contextlib import contextmanager
 from ._core import is_enabled
 from ._describe import describe
 from ._emit import emit
+from ._session import get_session_id
+from ._capture import capture_io
+
+_MAX_TOOL_OUTPUT = 10240
 
 
 def log_llm_call(
@@ -60,6 +64,10 @@ def log_llm_call(
         "model": model,
         "prompt": describe(prompt),
     }
+
+    session_id = get_session_id()
+    if session_id:
+        data["session_id"] = session_id
     
     if response is not None:
         data["response"] = describe(response)
@@ -269,6 +277,10 @@ def llm_call(model: str, prompt: str, **kwargs: Any):
             "ms": round(duration_ms, 1),
         }
         
+        session_id = get_session_id()
+        if session_id:
+            data["session_id"] = session_id
+        
         if "response" in call_data:
             data["response"] = describe(call_data["response"])
         
@@ -293,6 +305,10 @@ def llm_call(model: str, prompt: str, **kwargs: Any):
             "ms": round(duration_ms, 1),
             "error": {"type": type(e).__name__, "msg": str(e)},
         }
+
+        session_id = get_session_id()
+        if session_id:
+            data["session_id"] = session_id
         
         if kwargs:
             data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
@@ -327,8 +343,15 @@ def tool_call(tool_name: str, arguments: Dict[str, Any], **kwargs: Any):
     start_time = time.time()
     call_data = {"call_id": call_id}
     
+    # Capture IO during execution
+    captured_out = ""
+    captured_err = ""
+    
     try:
-        yield call_data
+        with capture_io() as (out_stream, err_stream):
+            yield call_data
+            captured_out = out_stream.getvalue()
+            captured_err = err_stream.getvalue()
         
         duration_ms = (time.time() - start_time) * 1000
         
@@ -339,6 +362,17 @@ def tool_call(tool_name: str, arguments: Dict[str, Any], **kwargs: Any):
             "ms": round(duration_ms, 1),
             "success": True,
         }
+
+        if captured_out or captured_err:
+            data["sys"] = {}
+            if captured_out:
+                data["sys"]["stdout"] = captured_out[:_MAX_TOOL_OUTPUT]
+                if len(captured_out) > _MAX_TOOL_OUTPUT:
+                    data["sys"]["stdout_truncated"] = len(captured_out)
+            if captured_err:
+                data["sys"]["stderr"] = captured_err[:_MAX_TOOL_OUTPUT]
+                if len(captured_err) > _MAX_TOOL_OUTPUT:
+                    data["sys"]["stderr_truncated"] = len(captured_err)
         
         if "result" in call_data:
             data["result"] = describe(call_data["result"])
@@ -359,6 +393,19 @@ def tool_call(tool_name: str, arguments: Dict[str, Any], **kwargs: Any):
             "success": False,
             "error": {"type": type(e).__name__, "msg": str(e)},
         }
+
+        # Partial IO may have been captured before the exception;
+        # include whatever was written before the crash.
+        if captured_out or captured_err:
+            data["sys"] = {}
+            if captured_out:
+                data["sys"]["stdout"] = captured_out[:_MAX_TOOL_OUTPUT]
+                if len(captured_out) > _MAX_TOOL_OUTPUT:
+                    data["sys"]["stdout_truncated"] = len(captured_out)
+            if captured_err:
+                data["sys"]["stderr"] = captured_err[:_MAX_TOOL_OUTPUT]
+                if len(captured_err) > _MAX_TOOL_OUTPUT:
+                    data["sys"]["stderr_truncated"] = len(captured_err)
         
         if kwargs:
             data["ctx"] = {k: describe(v) for k, v in kwargs.items()}

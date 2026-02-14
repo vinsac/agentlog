@@ -40,6 +40,13 @@ from ._core import (
     is_enabled,
 )
 
+# Session management (Phase 1)
+from ._session import (
+    start_session,
+    end_session,
+    get_session_id,
+)
+
 # Core logging API
 from ._api import (
     log,
@@ -133,6 +140,10 @@ __all__ = [
     "disable",
     "configure",
     "is_enabled",
+    # Session
+    "start_session",
+    "end_session",
+    "get_session_id",
     # Core API
     "log",
     "log_vars",

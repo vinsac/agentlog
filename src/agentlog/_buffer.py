@@ -180,3 +180,40 @@ def summary() -> Dict[str, Any]:
         "slowest_funcs": slow_funcs[:5],
         "traces": list(traces),
     }
+
+
+def token_summary() -> Dict[str, Any]:
+    """
+    Aggregate token usage from LLM calls in the current buffer.
+    
+    Returns:
+        Dict with total tokens and breakdown by model.
+    """
+    with _ringbuffer_lock:
+        entries = list(_ringbuffer)
+    
+    total_in = 0
+    total_out = 0
+    by_model: Dict[str, Dict[str, int]] = {}
+    
+    for e in entries:
+        if e.get("tag") == "llm":
+            t_in = e.get("tokens_in", 0)
+            t_out = e.get("tokens_out", 0)
+            model = e.get("model", "unknown")
+            
+            total_in += t_in
+            total_out += t_out
+            
+            if model not in by_model:
+                by_model[model] = {"in": 0, "out": 0}
+            
+            by_model[model]["in"] += t_in
+            by_model[model]["out"] += t_out
+            
+    return {
+        "total_in": total_in,
+        "total_out": total_out,
+        "total": total_in + total_out,
+        "by_model": by_model,
+    }

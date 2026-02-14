@@ -54,6 +54,10 @@ _enabled: Optional[bool] = None
 _level: int = LEVEL_DEBUG
 _tag_prefix: str = "AGENTLOG"
 
+_session_id: Optional[str] = None
+_agent_name: Optional[str] = None
+_task: Optional[str] = None
+
 
 def _detect_enabled() -> bool:
     """Check environment variables to determine if agentlog is enabled."""

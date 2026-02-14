@@ -34,7 +34,11 @@ def _capture_failure(exc_type, exc_value, exc_traceback):
     
     # Extract frame information from the traceback
     if exc_traceback is not None:
-        frame = exc_traceback.tb_frame
+        # Walk to the bottom frame (where the error occurred)
+        tb = exc_traceback
+        while tb.tb_next:
+            tb = tb.tb_next
+        frame = tb.tb_frame
         
         # Capture local variables at failure point
         locals_dict = {}
@@ -54,6 +58,12 @@ def _capture_failure(exc_type, exc_value, exc_traceback):
             },
             "locals": locals_dict,
         }
+        
+        # Inject session_id if available
+        from ._session import get_session_id
+        session_id = get_session_id()
+        if session_id:
+            error_data["session_id"] = session_id
         
         # Emit the structured failure context
         # Use depth=0 since we're already at the right frame

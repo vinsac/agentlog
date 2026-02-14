@@ -156,6 +156,11 @@ def emit(tag: str, data: Dict[str, Any], depth: int = 3) -> None:
         "at": _caller(depth),
     }
 
+    # Inject session ID if active
+    from . import _core
+    if _core._session_id:
+        entry["session_id"] = _core._session_id
+
     # Inject trace context if active
     if _trace_id:
         entry["trace"] = _trace_id

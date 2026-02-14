@@ -18,6 +18,7 @@ minimize token usage in LLM context windows:
 """
 
 import json
+import re
 from typing import Any, Dict
 
 
@@ -25,6 +26,21 @@ _MAX_SCALAR_LEN = 200
 _MAX_COLLECTION_PREVIEW = 5
 _MAX_DICT_KEYS = 20
 _MAX_REPR_LEN = 300
+
+
+REDACTION_PATTERNS = [
+    (r'sk-[A-Za-z0-9]{48}', 'openai_api_key'),
+    (r'Bearer [A-Za-z0-9\-._~+/]+=*', 'bearer_token'),
+    (r'[A-Za-z0-9]{32,}', 'generic_token'),
+    (r'password["\']?\s*[:=]\s*["\']([^"\']+)', 'password')
+]
+
+def redact(value: str) -> str:
+    """Redact confidential information from strings."""
+    for pattern, label in REDACTION_PATTERNS:
+        if re.search(pattern, value):
+            return re.sub(pattern, f"***{label.upper()}***", value)
+    return value
 
 
 def describe(value: Any) -> Dict[str, Any]:
@@ -45,11 +61,14 @@ def describe(value: Any) -> Dict[str, Any]:
         return d
 
     if isinstance(value, str):
-        if len(value) <= _MAX_SCALAR_LEN:
-            d["v"] = value
+        # Redact secrets before truncation
+        safe_value = redact(value)
+        
+        if len(safe_value) <= _MAX_SCALAR_LEN:
+            d["v"] = safe_value
         else:
-            d["v"] = value[:_MAX_SCALAR_LEN]
-            d["truncated"] = len(value)
+            d["v"] = safe_value[:_MAX_SCALAR_LEN]
+            d["truncated"] = len(safe_value)
         return d
 
     if isinstance(value, bytes):
