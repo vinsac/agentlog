@@ -110,8 +110,21 @@ def get_context(max_tokens=4000, tags=None):
     # estimate tokens and truncate
     return entries
 ```
-
 **Why:** Fits in LLM context windows.
+
+### Agent Context Pattern
+
+**Failure-prioritized, session-scoped context:**
+```python
+def get_debug_context(max_tokens=4000):
+    # 1. Prioritize errors
+    # 2. Add session & git context
+    # 3. Add token summary
+    # 4. Fill remaining budget with recent events
+    return context_string
+```
+
+**Why:** Gives agents exactly what they need to fix bugs (errors first, git state, tool history).
 
 ## Anti-Patterns
 

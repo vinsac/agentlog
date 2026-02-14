@@ -28,9 +28,11 @@ Defines the minimal, functional architecture for agentlog's failure-boundary run
 - `log()`: Basic message with context
 - `log_error()`: Error with structured context
 - `log_vars()`: Variable inspection
-- `log_func`: Function decorator
-- `get_context()`: Token-budgeted export
-- `summary()`: Session summary
+- `start_session()` / `end_session()`: Session management
+- `llm_call()` / `tool_call()`: Context managers
+- `get_debug_context()`: Failure-prioritized export
+- `get_context()`: Log export
+- `summary()` / `token_summary()`: Aggregations
 
 **3. Private Helper Functions**
 - `_summarize_value()`: Convert any value to descriptor
@@ -40,6 +42,8 @@ Defines the minimal, functional architecture for agentlog's failure-boundary run
 **4. Automatic Capture**
 - `sys.excepthook` override for unhandled exceptions
 - Captures local variables at failure point
+- Captures stdout/stderr from tools (`_capture.py`)
+- Captures git diffs between turns (`_git.py`)
 - No decorator or instrumentation required
 
 ## Data Flow
