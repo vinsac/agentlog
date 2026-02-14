@@ -251,6 +251,24 @@ from ._analytics import (
     clear_analytics,
 )
 
+# Clear Winner Feature 1: One-Shot Crash Fixer
+from ._fixer import (
+    fix_this_crash,
+    analyze_crash,
+)
+
+# Clear Winner Feature 2: Multi-Agent Flow Visualizer
+from ._flow import (
+    visualize_agent_flow,
+    get_cascade_summary,
+)
+
+# Clear Winner Feature 3: Regression Validator
+from ._validate import (
+    validate_refactoring,
+    quick_validate,
+)
+
 # Install failure hook automatically if enabled
 if is_enabled():
     install_failure_hook()
@@ -379,6 +397,15 @@ __all__ = [
     "generate_team_report",
     "export_analytics",
     "clear_analytics",
+    # Clear Winner Feature 1: One-Shot Crash Fixer ⭐
+    "fix_this_crash",
+    "analyze_crash",
+    # Clear Winner Feature 2: Multi-Agent Flow Visualizer 🌊
+    "visualize_agent_flow",
+    "get_cascade_summary",
+    # Clear Winner Feature 3: Regression Validator ✅
+    "validate_refactoring",
+    "quick_validate",
     # Agent workflow (Phase 2)
     "log_llm_call",
     "log_tool_call",
