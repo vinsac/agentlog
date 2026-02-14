@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentlog"
+version = "1.0.0"
+description = "Runtime observability for AI coding agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{ name = "Vinay Sachdeva" }]
+keywords = [
+    "logging",
+    "ai",
+    "agents",
+    "observability",
+    "debugging",
+    "llm",
+    "vibe-coding",
+    "tracing",
+    "structured-logging",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Logging",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/vinsac/agentlog"
+Documentation = "https://github.com/vinsac/agentlog#readme"
+Repository = "https://github.com/vinsac/agentlog"
+Issues = "https://github.com/vinsac/agentlog/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentlog"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
