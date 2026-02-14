@@ -179,6 +179,46 @@ from ._regression import (
     generate_regression_report,
 )
 
+# Phase 4: Structured Output Templates
+from ._formats import (
+    get_formatted_context,
+    list_formats,
+    get_format_description,
+    to_mcp_resource,
+    to_mcp_tool_result,
+)
+
+# Phase 4: OpenTelemetry Bridge
+from ._otel import (
+    to_otlp_logs,
+    to_otlp_spans,
+    export_otlp_json,
+    export_otlp_proto,
+    export_spans_json,
+)
+
+# Phase 4: MCP Server
+from ._mcp import (
+    run_mcp_server,
+    mcp_entry,
+    handle_list_resources,
+    handle_read_resource,
+    handle_list_tools,
+    handle_call_tool,
+)
+
+# Phase 4: Remote Sync (Optional D1)
+from ._remote import (
+    is_d1_enabled,
+    init_d1_schema,
+    sync_session_to_d1,
+    load_session_from_d1,
+    list_d1_sessions,
+    delete_d1_session,
+    share_session,
+    import_shared_session,
+)
+
 # Install failure hook automatically if enabled
 if is_enabled():
     install_failure_hook()
@@ -265,6 +305,27 @@ __all__ = [
     "detect_regression",
     "compare_to_baseline",
     "generate_regression_report",
+    # Phase 4: Structured Output Templates
+    "get_formatted_context",
+    "list_formats",
+    "get_format_description",
+    "to_mcp_resource",
+    "to_mcp_tool_result",
+    # Phase 4: OpenTelemetry Bridge
+    "to_otlp_logs",
+    "to_otlp_spans",
+    "export_otlp_json",
+    "export_spans_json",
+    # Phase 4: MCP Server
+    "run_mcp_server",
+    "mcp_entry",
+    # Phase 4: Remote Sync
+    "is_d1_enabled",
+    "sync_session_to_d1",
+    "load_session_from_d1",
+    "list_d1_sessions",
+    "share_session",
+    "import_shared_session",
     # Agent workflow (Phase 2)
     "log_llm_call",
     "log_tool_call",

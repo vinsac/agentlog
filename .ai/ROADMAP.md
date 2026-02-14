@@ -260,23 +260,14 @@ AI coding agents have transformed software development, but they face a critical
 
 **Objective:** Meet agents where they work — inside their existing tools.
 
-**Why This Matters:** Agents work inside specific tools. Export formats optimized for each tool's context window and prompt style maximizes adoption.
+**Implementation Status:** ✅ Complete (251 tests passing)
 
-| Deliverable | Implementation | Value |
-|-------------|----------------|-------|
-| **MCP Server Protocol** | `agentlog mcp` subcommand | Cursor/Claude Desktop native integration |
-| **OpenTelemetry Bridge** | `to_otlp()` export function | Fits into existing observability stacks |
-| **Structured Output Templates** | `get_context(format="cursor"\|"claude"\|"codex")` | Optimized prompts per agent type |
-| **Remote Sync (Optional)** | Cloudflare D1 sink for team sharing | Shared debugging context across team |
-
-**Why NOT Build Native IDE Extensions:**
-- IDE extensions require separate codebases (TypeScript, different release cycles)
-- MCP protocol provides sufficient integration
-- Focus on core value, not distribution channels
-
-**Success Metric:**
-- 3 major agent integrations (Cursor, Claude Code, Continue)
-- One-command export to any supported format
+| Deliverable | Status | Implementation | Value |
+|-------------|--------|----------------|-------|
+| **MCP Server Protocol** | ✅ Complete | `_mcp.py`: `run_mcp_server()`, 4 tools, 3 resources | Cursor/Claude Desktop native integration |
+| **OpenTelemetry Bridge** | ✅ Complete | `_otel.py`: `to_otlp_logs()`, `to_otlp_spans()`, `export_otlp_json()` | Fits into existing observability stacks |
+| **Structured Output Templates** | ✅ Complete | `_formats.py`: `get_formatted_context()`, cursor/claude/codex formats | Optimized prompts per agent type |
+| **Remote Sync (Optional)** | ✅ Complete | `_remote.py`: `sync_session_to_d1()`, `share_session()` | Cloudflare D1 for team sharing |
 
 ---
 
