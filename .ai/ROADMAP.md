@@ -199,15 +199,15 @@ AI coding agents have transformed software development, but they face a critical
 
 **Objective:** Make AgentLog the best-in-class tool for AI agent runtime debugging.
 
-**Implementation Status:** In Progress
+**Implementation Status:** ✅ Complete (146 tests passing)
 
 | Deliverable | Status | Implementation | Value |
 |-------------|--------|----------------|-------|
-| **Session Correlation** | 🔄 Pending | `_session.py`: `start_session(agent, task)`, automatic git capture | Agents track multi-turn work context |
-| **Enhanced Failure Capture** | 🔄 Pending | `_failure.py`: Locals at crash point, inline secret redaction | Agents see *actual* variable values when code fails |
-| **Token Aggregation** | 🔄 Pending | `_buffer.py`: `token_summary()` by model | Agents understand cumulative cost per session |
-| **Tool Output Isolation** | 🔄 Pending | `_capture.py`: Context manager capturing stdout/stderr | Agents debug tool failures without log noise |
-| **Git Diff Tracking** | 🔄 Pending | `_git.py`: Auto-capture first 50 lines of diff | Agents see what changed between turns |
+| **Session Correlation** | ✅ Complete | `_session.py`: `start_session(agent, task)`, automatic git capture | Agents track multi-turn work context |
+| **Enhanced Failure Capture** | ✅ Complete | `_failure.py`: Locals at crash point, inline secret redaction | Agents see *actual* variable values when code fails |
+| **Token Aggregation** | ✅ Complete | `_buffer.py`: `token_summary()` by model | Agents understand cumulative cost per session |
+| **Tool Output Isolation** | ✅ Complete | `_capture.py`: Context manager capturing stdout/stderr | Agents debug tool failures without log noise |
+| **Git Diff Tracking** | ✅ Complete | `_git.py`: Auto-capture first 50 lines of diff | Agents see what changed between turns |
 
 **Why These Features:**
 - These primitives directly address the 5 most common debugging bottlenecks
@@ -230,22 +230,14 @@ AI coding agents have transformed software development, but they face a critical
 
 **Objective:** Enable agents to learn from previous debugging attempts.
 
-**Why This Matters:** The hardest bugs require multiple attempts. Without correlation, agents repeat the same failed strategies.
+**Implementation Status:** 🔄 In Progress (31 new tests)
 
-| Deliverable | Implementation | Value |
-|-------------|----------------|-------|
-| **Error Pattern Detection** | Hash error (type + file + line) → correlate across sessions | Agents recognize recurring failures |
-| **Debug Context Persistence** | `get_debug_context()` exports to JSONL with searchable tags | Agents can reference previous fixes |
-| **Session-to-Session Linking** | Parent session ID for related work | Track iterative debugging attempts |
-| **Workspace State Snapshots** | Lightweight file hash tracking | Agents know what files existed when |
-
-**Why NOT Full Workspace Snapshots:**
-- Storage/complexity explosion
-- Git already tracks file contents
-- File hashes + git diff = sufficient context
-
-**Success Metric:**
-- 70% of recurring errors identified and resolved using prior context
+| Deliverable | Status | Implementation | Value |
+|-------------|--------|----------------|-------|
+| **Error Pattern Detection** | ✅ Complete | `_correlation.py`: `hash_error()`, `record_error_pattern()`, `correlate_error()` | Agents recognize recurring failures |
+| **Debug Context Persistence** | ✅ Complete | `get_debug_context()` exports JSONL; patterns stored in `.agentlog/error_patterns.json` | Agents reference previous fixes |
+| **Session-to-Session Linking** | ✅ Complete | `_session.py`: `parent_session_id` parameter, `get_parent_session_id()` | Track iterative debugging attempts |
+| **Workspace State Snapshots** | ✅ Complete | `_workspace.py`: `snapshot_workspace()`, `compare_snapshots()`, file hash tracking | Agents know what files existed when |
 
 ---
 

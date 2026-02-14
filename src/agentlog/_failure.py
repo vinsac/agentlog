@@ -52,6 +52,8 @@ def _capture_failure(exc_type, exc_value, exc_traceback):
         # Build structured error context
         error_data = {
             "fn": frame.f_code.co_name,
+            "file": frame.f_code.co_filename,
+            "line": frame.f_lineno,
             "error": {
                 "type": exc_type.__name__,
                 "msg": str(exc_value),
@@ -64,6 +66,19 @@ def _capture_failure(exc_type, exc_value, exc_traceback):
         session_id = get_session_id()
         if session_id:
             error_data["session_id"] = session_id
+        
+        # Record error pattern for cross-run correlation (Phase 2)
+        try:
+            from ._correlation import record_error_pattern
+            record_error_pattern(
+                error_type=exc_type.__name__,
+                filename=frame.f_code.co_filename,
+                line=frame.f_lineno,
+                session_id=session_id,
+                context={"msg": str(exc_value)[:200]}
+            )
+        except Exception:
+            pass  # Silent fail - correlation is optional
         
         # Emit the structured failure context
         # Use depth=0 since we're already at the right frame
