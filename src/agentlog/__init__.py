@@ -153,6 +153,32 @@ from ._workspace import (
     hash_file,
 )
 
+# Phase 3: Evaluation & Outcome Tagging
+from ._outcome import (
+    tag_outcome,
+    tag_session_outcome,
+    get_outcome,
+    get_all_outcomes,
+    get_outcome_stats,
+    detect_outcome_from_logs,
+    auto_tag_session,
+    OUTCOME_SUCCESS,
+    OUTCOME_FAILURE,
+    OUTCOME_PARTIAL,
+    OUTCOME_UNKNOWN,
+)
+
+# Phase 3: Regression Detection
+from ._regression import (
+    set_baseline,
+    get_baseline,
+    list_baselines,
+    delete_baseline,
+    detect_regression,
+    compare_to_baseline,
+    generate_regression_report,
+)
+
 # Install failure hook automatically if enabled
 if is_enabled():
     install_failure_hook()
@@ -219,6 +245,26 @@ __all__ = [
     "snapshot_session",
     "compare_to_session_baseline",
     "hash_file",
+    # Phase 3: Evaluation & Outcomes
+    "tag_outcome",
+    "tag_session_outcome",
+    "get_outcome",
+    "get_all_outcomes",
+    "get_outcome_stats",
+    "detect_outcome_from_logs",
+    "auto_tag_session",
+    "OUTCOME_SUCCESS",
+    "OUTCOME_FAILURE",
+    "OUTCOME_PARTIAL",
+    "OUTCOME_UNKNOWN",
+    # Phase 3: Regression Detection
+    "set_baseline",
+    "get_baseline",
+    "list_baselines",
+    "delete_baseline",
+    "detect_regression",
+    "compare_to_baseline",
+    "generate_regression_report",
     # Agent workflow (Phase 2)
     "log_llm_call",
     "log_tool_call",
