@@ -11,8 +11,9 @@ import threading
 from collections import deque
 from typing import Any, Dict, List, Optional
 
+from . import _core
 from . import _emit
-from ._tokens import fit_entries_to_budget
+from ._tokens import fit_entries_to_budget, estimate_tokens
 from ._priority import smart_filter as _smart_filter
 
 
@@ -217,3 +218,86 @@ def token_summary() -> Dict[str, Any]:
         "total": total_in + total_out,
         "by_model": by_model,
     }
+
+
+_HIGH_PRIORITY_TAGS = {"error", "session"}
+
+
+def get_debug_context(max_tokens: int = 4000) -> str:
+    """
+    Export a failure-prioritized debug context for AI agents.
+
+    Auto-includes errors first, git state, token usage, then fills
+    remaining budget with recent events. Session-scoped when active.
+
+    Args:
+        max_tokens: Approximate token budget (1 token ~ 4 chars).
+
+    Returns:
+        A string ready to paste into an AI agent's context window.
+    """
+    with _ringbuffer_lock:
+        entries = list(_ringbuffer)
+
+    session_id = _core._session_id
+
+    if session_id:
+        entries = [e for e in entries if e.get("session_id") == session_id]
+
+    errors = [e for e in entries if e.get("tag") in _HIGH_PRIORITY_TAGS]
+    rest = [e for e in entries if e.get("tag") not in _HIGH_PRIORITY_TAGS]
+
+    header_lines = ["# agentlog debug context"]
+
+    if session_id:
+        header_lines[0] += f" (session: {session_id})"
+
+    session_events = [e for e in entries if e.get("tag") == "session"]
+    if session_events:
+        last_session = session_events[-1]
+        git = last_session.get("git", {})
+        if git and git.get("commit"):
+            branch = git.get("branch", "?")
+            commit_short = git["commit"][:7]
+            dirty = " dirty" if git.get("dirty") else ""
+            header_lines.append(f"# git: {branch}@{commit_short}{dirty}")
+
+    tokens = token_summary()
+    if tokens["total"] > 0:
+        models = ", ".join(
+            f"{m}: {d['in']}in/{d['out']}out"
+            for m, d in tokens["by_model"].items()
+        )
+        header_lines.append(f"# tokens: {tokens['total']} total ({models})")
+
+    header = "\n".join(header_lines)
+    header_tokens = estimate_tokens(header)
+    remaining_budget = max_tokens - header_tokens - 10
+
+    error_lines = []
+    error_tokens = 0
+    for e in errors:
+        line = json.dumps(e, default=str, separators=(',', ':'))
+        t = estimate_tokens(line)
+        if error_tokens + t > remaining_budget:
+            break
+        error_lines.append(line)
+        error_tokens += t
+
+    context_budget = remaining_budget - error_tokens
+    if context_budget > 0:
+        context_entries = fit_entries_to_budget(rest, context_budget)
+        context_lines = [
+            json.dumps(e, default=str, separators=(',', ':'))
+            for e in context_entries
+        ]
+    else:
+        context_lines = []
+
+    parts = [header]
+    if error_lines:
+        parts.append("\n".join(error_lines))
+    if context_lines:
+        parts.append("\n".join(context_lines))
+
+    return "\n".join(parts)
