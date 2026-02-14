@@ -219,6 +219,38 @@ from ._remote import (
     import_shared_session,
 )
 
+# Phase 5: Intelligent Context Pruning
+from ._prune import (
+    prune_context,
+    compress_context,
+    get_context_summary,
+    score_entry_importance,
+    summarize_entries,
+)
+
+# Phase 5: Visual Diff Rendering
+from ._visual import (
+    render_git_diff,
+    render_session_diff,
+    get_diff_summary,
+    export_diff_for_review,
+    render_diff_markdown,
+    render_diff_html,
+)
+
+# Phase 5: Team Analytics
+from ._analytics import (
+    record_session_analytics,
+    get_team_stats,
+    get_error_trends,
+    get_common_issues,
+    get_agent_performance,
+    compare_periods,
+    generate_team_report,
+    export_analytics,
+    clear_analytics,
+)
+
 # Install failure hook automatically if enabled
 if is_enabled():
     install_failure_hook()
@@ -326,6 +358,27 @@ __all__ = [
     "list_d1_sessions",
     "share_session",
     "import_shared_session",
+    # Phase 5: Intelligent Context Pruning
+    "prune_context",
+    "compress_context",
+    "get_context_summary",
+    "score_entry_importance",
+    "summarize_entries",
+    # Phase 5: Visual Diff Rendering
+    "render_git_diff",
+    "render_session_diff",
+    "get_diff_summary",
+    "export_diff_for_review",
+    # Phase 5: Team Analytics
+    "record_session_analytics",
+    "get_team_stats",
+    "get_error_trends",
+    "get_common_issues",
+    "get_agent_performance",
+    "compare_periods",
+    "generate_team_report",
+    "export_analytics",
+    "clear_analytics",
     # Agent workflow (Phase 2)
     "log_llm_call",
     "log_tool_call",
