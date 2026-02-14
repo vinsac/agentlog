@@ -21,7 +21,6 @@ agentlog/
 │   ├── _buffer.py         # Token-aware ringbuffer, get_context, summary
 │   ├── _sink.py           # JSONL file sink
 │   ├── _decorator.py      # @log_func decorator (sync + async)
-│   ├── compat.py          # Backward compat shim for devlog API names
 │   └── py.typed           # PEP 561 marker
 ├── tests/                 # pytest test suite (82 tests)
 ├── pyproject.toml         # PEP 621, hatchling build

@@ -38,8 +38,6 @@ from ._core import (
     disable,
     configure,
     is_enabled,
-    enable_dev_logging,
-    disable_dev_logging,
 )
 
 # Core logging API
@@ -93,8 +91,6 @@ __all__ = [
     "disable",
     "configure",
     "is_enabled",
-    "enable_dev_logging",
-    "disable_dev_logging",
     # Core API
     "log",
     "log_vars",

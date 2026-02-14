@@ -288,20 +288,6 @@ Every value is described with a compact descriptor optimized for LLM token budge
 
 ~40% fewer tokens. Over hundreds of log lines in a debugging session, this adds up.
 
-## Migrating from devlog
-
-agentlog includes a backward compatibility shim:
-
-```python
-# Step 1: Change import source
-from agentlog.compat import devlog, devlog_vars, devlog_func, devlog_span
-
-# Step 2 (optional): Rename to new API
-from agentlog import log, log_vars, log_func, span
-```
-
-The `DEVLOG=true` env var also continues to work.
-
 ## API Reference
 
 ### Core

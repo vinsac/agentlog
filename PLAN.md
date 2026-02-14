@@ -391,28 +391,7 @@ testpaths = ["tests"]
 
 ---
 
-## 8. Backward Compatibility
-
-For Curiios and existing users of `devlog`:
-
-```python
-# agentlog provides a compatibility shim
-from agentlog.compat import (
-    devlog, devlog_vars, devlog_state, devlog_error,
-    devlog_check, devlog_http, devlog_func,
-    devlog_trace, devlog_trace_end, devlog_span,
-    devlog_decision, devlog_flow, devlog_diff,
-    devlog_query, devlog_perf,
-    devlog_to_file, devlog_close_file,
-    devlog_get_context, devlog_set_buffer_size, devlog_summary,
-)
-```
-
-The `DEVLOG=true` env var will also continue to work alongside `AGENTLOG=true`.
-
----
-
-## 9. Success Criteria
+## 8. Success Criteria
 
 - [ ] `pip install agentlog` works
 - [ ] Zero dependencies (stdlib only)

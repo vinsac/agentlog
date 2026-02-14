@@ -20,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSONL file sink: `to_file`, `close_file`
 - Log levels: `AGENTLOG_LEVEL` env var (debug, info, warn, error)
 - Configuration: `enable`, `disable`, `configure`
-- Backward compatibility shim: `agentlog.compat` for devlog API names
 - AI-first value descriptor engine with compact keys (`t`, `v`, `n`, `k`, `sh`, `dt`)
 - Shape-aware descriptions for numpy, torch, and pandas objects
 - PEP 561 type stubs (`py.typed`)

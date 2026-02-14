@@ -49,11 +49,6 @@ def test_tag_levels_mapping():
     assert _core.TAG_LEVELS["error"] == _core.LEVEL_ERROR
 
 
-def test_backward_compat_aliases():
-    assert _core.enable_dev_logging is _core.enable
-    assert _core.disable_dev_logging is _core.disable
-
-
 def test_env_detection(monkeypatch):
     _core._enabled = None
     monkeypatch.setenv("AGENTLOG", "true")

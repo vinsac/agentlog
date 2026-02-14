@@ -117,8 +117,3 @@ def configure(
 def get_tag_prefix() -> str:
     """Get the current tag prefix."""
     return _tag_prefix
-
-
-# Backward compatibility aliases
-enable_dev_logging = enable
-disable_dev_logging = disable
