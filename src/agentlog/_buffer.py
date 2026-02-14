@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 
 from . import _emit
 from ._tokens import fit_entries_to_budget
+from ._priority import smart_filter as _smart_filter
 
 
 # ---------------------------------------------------------------------------
@@ -78,6 +79,50 @@ def get_context(
     
     # Convert to JSONL format
     lines = [json.dumps(e, default=str, separators=(',', ':')) for e in selected_entries]
+    return '\n'.join(lines)
+
+
+def get_context_smart(
+    max_tokens: int = 4000,
+    importance: str = "medium",
+    tags: Optional[List[str]] = None,
+) -> str:
+    """
+    Smart context export with importance filtering and compression.
+    
+    Phase 2 enhancement: Filters by importance before fitting to token budget.
+    
+    Args:
+        max_tokens: Token budget
+        importance: "low", "medium", "high", or "critical"
+        tags: Optional tag filter (applied after importance filter)
+    
+    Returns:
+        JSONL string of filtered entries
+        
+    Example:
+        # Get only high-priority entries within budget
+        context = get_context_smart(max_tokens=2000, importance="high")
+        
+        # Get critical errors and decisions
+        context = get_context_smart(
+            max_tokens=1000, 
+            importance="critical",
+            tags=["error", "decision"]
+        )
+    """
+    with _ringbuffer_lock:
+        entries = list(_ringbuffer)
+    
+    # Apply tag filter first if specified
+    if tags:
+        entries = [e for e in entries if e.get("tag") in tags]
+    
+    # Use smart filtering (importance + compression + token budget)
+    filtered = _smart_filter(entries, max_tokens, importance)
+    
+    # Convert to JSONL
+    lines = [json.dumps(e, default=str, separators=(',', ':')) for e in filtered]
     return '\n'.join(lines)
 
 

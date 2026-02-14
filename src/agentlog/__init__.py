@@ -70,9 +70,20 @@ from ._advanced import (
     log_perf,
 )
 
+# Agent workflow optimization (Phase 2)
+from ._agent import (
+    log_llm_call,
+    log_tool_call,
+    log_prompt,
+    log_response,
+    llm_call,
+    tool_call,
+)
+
 # Context budget
 from ._buffer import (
     get_context,
+    get_context_smart,
     summary,
     set_buffer_size,
 )
@@ -123,6 +134,7 @@ __all__ = [
     "log_perf",
     # Context budget
     "get_context",
+    "get_context_smart",
     "summary",
     "set_buffer_size",
     # File sink
@@ -131,4 +143,11 @@ __all__ = [
     # Automatic failure capture
     "install_failure_hook",
     "uninstall_failure_hook",
+    # Agent workflow (Phase 2)
+    "log_llm_call",
+    "log_tool_call",
+    "log_prompt",
+    "log_response",
+    "llm_call",
+    "tool_call",
 ]
