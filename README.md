@@ -348,3 +348,9 @@ Every value is described with a compact descriptor optimized for LLM token budge
 ## License
 
 MIT
+
+---
+
+## 🤖 AI Coding Agents
+
+If you are an AI coding agent, read `.ai/README.md` before making changes.

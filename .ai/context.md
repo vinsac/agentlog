@@ -1,53 +1,49 @@
-# agentlog — AI Agent Context
+# Project Context
 
-> Runtime observability for AI coding agents.
+## Domain
 
-## What This Is
+Agent Runtime Visibility Toolkit for AI-native development.
 
-A zero-dependency Python library (stdlib only, 3.9+) that outputs structured JSON logs designed for AI coding agents to parse from terminal output. Works in both development and production.
+## Problem Statement
 
-## Repo Structure
+AI coding agents (Cursor, Windsurf, Claude Code, Codex, Copilot) can read source code but cannot see runtime state. This causes:
 
-```
-agentlog/
-├── src/agentlog/          # Source code
-│   ├── __init__.py        # Public API re-exports
-│   ├── _core.py           # Config, enable/disable, env detection, log levels
-│   ├── _describe.py       # Value descriptor engine (compact keys: t, v, n, k)
-│   ├── _emit.py           # Output engine: format, route to sinks
-│   ├── _api.py            # Core API: log, log_vars, log_state, log_error, log_check, log_http
-│   ├── _trace.py          # Distributed tracing: trace, span, get_trace_id
-│   ├── _advanced.py       # log_decision, log_flow, log_diff, log_query, log_perf
-│   ├── _buffer.py         # Token-aware ringbuffer, get_context, summary
-│   ├── _sink.py           # JSONL file sink
-│   ├── _decorator.py      # @log_func decorator (sync + async)
-│   └── py.typed           # PEP 561 marker
-├── tests/                 # pytest test suite (82 tests)
-├── pyproject.toml         # PEP 621, hatchling build
-├── PLAN.md                # Project plan and design decisions
-├── CHANGELOG.md           # Version history
-└── README.md              # Full documentation
-```
+- Agents hallucinate about variable values and execution paths
+- Debugging loops where agents propose incorrect fixes
+- Context window overflow with noisy, human-readable logs
+- Wasted developer time re-running experiments
 
-## Key Design Decisions
+**Core Gap:** No lightweight, token-efficient runtime visibility layer exists for AI agents to reason over.
 
-- **Short keys** (`t`, `v`, `n`, `k`) minimize LLM token usage
-- **Log levels** (debug/info/warn/error) via `AGENTLOG_LEVEL` env var
-- **Tag prefix** `[AGENTLOG:<tag>]` for grep-friendly output
-- **Ringbuffer** (default 500 entries) with token-budgeted export
-- **Thread-safe** sequence counter, JSONL writes, ringbuffer access
-- **No dependencies** — everything is Python stdlib
+## Target Users
 
-## Environment Variables
+- Solo founders using AI coding tools for rapid development
+- AI-heavy startups building with agent-driven workflows
+- Backend teams experimenting with AI-assisted debugging
+- Developers building agentic applications
 
-| Variable | Purpose | Values |
-|----------|---------|--------|
-| `AGENTLOG` | Enable/disable | `true`, `1`, `yes`, `on` |
-| `AGENTLOG_LEVEL` | Minimum log level | `debug`, `info`, `warn`, `error` |
-| `DEVLOG` | Legacy toggle (also works) | `true`, `1`, `yes`, `on` |
+**Not targeting:** Conservative enterprises, traditional ops teams, or dashboard-focused organizations.
 
-## Running Tests
+## Success Metrics
 
-```bash
-pytest tests/ -v
-```
+- % reduction in agent debugging loops (primary)
+- Faster time-to-fix when using coding agents
+- Adoption by AI-native developers
+- Community contributions from agent users
+- GitHub stars from AI-first builders
+
+## What This Is NOT
+
+- Not a general logging framework (structlog, loguru)
+- Not an enterprise observability platform (Datadog, New Relic)
+- Not LLM call tracing (Langfuse, LangSmith)
+- Not distributed tracing infrastructure (OpenTelemetry)
+- Not a dashboard or monitoring product
+
+## AI Agent Guidelines
+
+- This is a failure-boundary runtime truth layer for AI agents
+- Optimize for token efficiency, not human readability
+- Focus on what agents cannot infer from static code analysis
+- Maintain zero/minimal dependencies
+- Stay lightweight and embeddable

@@ -83,6 +83,16 @@ from ._sink import (
     close_file,
 )
 
+# Automatic failure capture
+from ._failure import (
+    install_failure_hook,
+    uninstall_failure_hook,
+)
+
+# Install failure hook automatically if enabled
+if is_enabled():
+    install_failure_hook()
+
 __all__ = [
     # Version
     "__version__",
@@ -118,4 +128,7 @@ __all__ = [
     # File sink
     "to_file",
     "close_file",
+    # Automatic failure capture
+    "install_failure_hook",
+    "uninstall_failure_hook",
 ]
