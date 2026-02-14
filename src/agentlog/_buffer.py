@@ -12,6 +12,7 @@ from collections import deque
 from typing import Any, Dict, List, Optional
 
 from . import _emit
+from ._tokens import fit_entries_to_budget
 
 
 # ---------------------------------------------------------------------------
@@ -72,20 +73,11 @@ def get_context(
     if last_n:
         entries = entries[-last_n:]
 
-    # Build output within token budget (1 token ~ 4 chars)
-    max_chars = max_tokens * 4
-    lines: List[str] = []
-    total_chars = 0
-
-    # Work backwards from most recent (most relevant)
-    for entry in reversed(entries):
-        line = json.dumps(entry, default=str, separators=(',', ':'))
-        if total_chars + len(line) + 1 > max_chars:
-            break
-        lines.append(line)
-        total_chars += len(line) + 1
-
-    lines.reverse()  # restore chronological order
+    # Use improved token estimation to fit within budget
+    selected_entries = fit_entries_to_budget(entries, max_tokens)
+    
+    # Convert to JSONL format
+    lines = [json.dumps(e, default=str, separators=(',', ':')) for e in selected_entries]
     return '\n'.join(lines)
 
 
