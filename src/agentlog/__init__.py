@@ -80,6 +80,27 @@ from ._agent import (
     tool_call,
 )
 
+# Schema validation and exports (Phase 3)
+from ._schema import (
+    validate_entry,
+    validate_value_descriptor,
+    export_schema_json,
+    export_schema_typescript,
+    export_schema_go,
+    validate_jsonl_file,
+)
+
+# Framework adapters (Phase 3)
+from ._adapters import (
+    fastapi_middleware,
+    flask_before_request,
+    flask_after_request,
+    DjangoMiddleware,
+    log_endpoint,
+    asgi_middleware,
+    wsgi_middleware,
+)
+
 # Context budget
 from ._buffer import (
     get_context,
@@ -150,4 +171,19 @@ __all__ = [
     "log_response",
     "llm_call",
     "tool_call",
+    # Schema validation (Phase 3)
+    "validate_entry",
+    "validate_value_descriptor",
+    "export_schema_json",
+    "export_schema_typescript",
+    "export_schema_go",
+    "validate_jsonl_file",
+    # Framework adapters (Phase 3)
+    "fastapi_middleware",
+    "flask_before_request",
+    "flask_after_request",
+    "DjangoMiddleware",
+    "log_endpoint",
+    "asgi_middleware",
+    "wsgi_middleware",
 ]
