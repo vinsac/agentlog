@@ -31,7 +31,6 @@ _MAX_REPR_LEN = 300
 REDACTION_PATTERNS = [
     (r'sk-[A-Za-z0-9]{48}', 'openai_api_key'),
     (r'Bearer [A-Za-z0-9\-._~+/]+=*', 'bearer_token'),
-    (r'[A-Za-z0-9]{32,}', 'generic_token'),
     (r'password["\']?\s*[:=]\s*["\']([^"\']+)', 'password')
 ]
 

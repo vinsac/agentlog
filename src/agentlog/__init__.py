@@ -114,6 +114,7 @@ from ._buffer import (
     get_context_smart,
     get_debug_context,
     summary,
+    token_summary,
     set_buffer_size,
 )
 
@@ -170,6 +171,7 @@ __all__ = [
     "get_context_smart",
     "get_debug_context",
     "summary",
+    "token_summary",
     "set_buffer_size",
     # File sink
     "to_file",
