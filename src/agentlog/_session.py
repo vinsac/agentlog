@@ -5,6 +5,7 @@ Tracks the current agent session context (ID, agent name, task).
 """
 
 import uuid
+import os
 from typing import Optional, Dict, Any
 
 from . import _core
@@ -24,6 +25,11 @@ def start_session(agent_name: str, task: str, parent_session_id: Optional[str] =
     Returns:
         The generated session ID.
     """
+    if parent_session_id is None:
+        env_parent = os.getenv("AGENTLOG_PARENT_SESSION", "").strip()
+        if env_parent:
+            parent_session_id = env_parent
+
     session_id = f"sess_{uuid.uuid4().hex}"
     _core._session_id = session_id
     _core._agent_name = agent_name

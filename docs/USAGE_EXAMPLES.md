@@ -1,6 +1,17 @@
 # AgentLog Usage Examples
 
-Real-world integration patterns for AI coding agents.
+Real-world integration patterns for runtime observability in AI/LLM systems.
+
+---
+
+## Start Here: Generic Runtime Patterns
+
+These patterns are editor-agnostic and work for services, workers, and CI.
+
+- Runtime-first quickstarts: `docs/QUICKSTART_RECIPES.md`
+- Production deployment guide: `docs/PRODUCTION_DEPLOYMENT_GUIDE.md`
+- Incident replay workflow: `docs/INCIDENT_REPLAY_WORKFLOW.md`
+- CI templates and gates: `docs/CI_TEMPLATES.md`
 
 ---
 

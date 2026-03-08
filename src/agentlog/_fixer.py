@@ -453,3 +453,69 @@ def analyze_crash(session_id: Optional[str] = None) -> Dict[str, Any]:
         'variables_at_crash': list(error_info.get('locals', {}).keys()),
         'suggested_fix': fix_this_crash()[0] if error_info else None
     }
+
+
+def analyze_and_validate_refactoring(
+    baseline_session: Optional[str] = None,
+    new_session: Optional[str] = None,
+    strict_mode: bool = False,
+) -> Dict[str, Any]:
+    """
+    Analyze latest crash context and validate current session against a baseline.
+
+    This helper tightens the common workflow:
+    1) inspect crash context, then
+    2) run regression validation before merging a fix.
+
+    Args:
+        baseline_session: Baseline session ID (auto-resolved from saved baselines if omitted)
+        new_session: Session to validate (defaults to active session)
+        strict_mode: Passed through to validate_refactoring
+
+    Returns:
+        Dict with crash analysis, optional regression validation, and recommendation.
+    """
+    from ._session import get_session_id
+    from ._regression import get_baseline, list_baselines
+    from ._validate import validate_refactoring
+
+    crash_analysis = analyze_crash(session_id=new_session)
+
+    current_session = new_session or get_session_id()
+    resolved_baseline = baseline_session
+
+    if not resolved_baseline:
+        stable = get_baseline('stable')
+        if stable and stable.get('session_id'):
+            resolved_baseline = stable['session_id']
+        else:
+            baseline_ids = list_baselines()
+            if baseline_ids:
+                first = get_baseline(baseline_ids[0])
+                if first and first.get('session_id'):
+                    resolved_baseline = first['session_id']
+
+    validation = None
+    if resolved_baseline and current_session:
+        validation = validate_refactoring(
+            baseline_session=resolved_baseline,
+            new_session=current_session,
+            strict_mode=strict_mode,
+        )
+
+    if validation and not validation.get('safe_to_merge', False):
+        recommendation = 'Apply crash fix, then resolve regression blockers before merge.'
+    elif validation and validation.get('safe_to_merge', False):
+        recommendation = 'Crash context looks actionable and validation is green. Safe to proceed.'
+    elif not resolved_baseline:
+        recommendation = 'Crash analyzed, but no baseline session found for regression validation.'
+    else:
+        recommendation = 'Crash analyzed, but no active session found for regression validation.'
+
+    return {
+        'crash_analysis': crash_analysis,
+        'regression_validation': validation,
+        'baseline_session_used': resolved_baseline,
+        'new_session_used': current_session,
+        'recommendation': recommendation,
+    }

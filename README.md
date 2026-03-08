@@ -1,6 +1,6 @@
 # agentlog
 
-**Runtime state capture for AI agent debugging.**
+**Runtime observability for AI agents and LLM-powered applications (development + production).**
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
@@ -44,6 +44,21 @@ AI agents can read your source code. They **cannot** see:
 - Why a function was called with unexpected arguments
 
 agentlog captures this automatically. No print statements needed.
+
+## Positioning: Generic Runtime Layer (not editor-bound)
+
+agentlog is intentionally **editor-agnostic**.
+
+- Works in API services, workers, pipelines, and CI jobs
+- Works in production and development
+- Editor/IDE playbooks (Cursor, Claude Code, Codex, Windsurf) are optional overlays
+
+Start here for generic patterns:
+
+- `docs/QUICKSTART_RECIPES.md` (runtime-first quickstarts)
+- `docs/PRODUCTION_DEPLOYMENT_GUIDE.md`
+- `docs/INCIDENT_REPLAY_WORKFLOW.md`
+- `docs/CI_TEMPLATES.md`
 
 ## Quick Start
 

@@ -30,6 +30,8 @@ Reference: https://github.com/vinsac/agentlog
 License: MIT
 """
 
+import os
+
 __version__ = "1.0.0"
 
 # Core configuration
@@ -255,6 +257,7 @@ from ._analytics import (
 from ._fixer import (
     fix_this_crash,
     analyze_crash,
+    analyze_and_validate_refactoring,
 )
 
 # Clear Winner Feature 2: Multi-Agent Flow Visualizer
@@ -269,8 +272,28 @@ from ._validate import (
     quick_validate,
 )
 
+
+def _bootstrap_from_env() -> None:
+    """Apply optional environment-driven startup configuration."""
+    file_path = os.getenv("AGENTLOG_FILE", "").strip()
+    if file_path:
+        try:
+            to_file(file_path)
+        except Exception:
+            pass
+
+    buffer_size_raw = os.getenv("AGENTLOG_BUFFER_SIZE", "").strip()
+    if buffer_size_raw:
+        try:
+            buffer_size = int(buffer_size_raw)
+            if buffer_size > 0:
+                set_buffer_size(buffer_size)
+        except ValueError:
+            pass
+
 # Install failure hook automatically if enabled
 if is_enabled():
+    _bootstrap_from_env()
     install_failure_hook()
 
 __all__ = [
@@ -400,6 +423,7 @@ __all__ = [
     # One-Shot Crash Fixer ⭐
     "fix_this_crash",
     "analyze_crash",
+    "analyze_and_validate_refactoring",
     # Multi-Agent Flow Visualizer 🌊
     "visualize_agent_flow",
     "get_cascade_summary",

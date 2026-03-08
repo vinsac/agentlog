@@ -64,6 +64,27 @@ analysis = agentlog.analyze_crash(
 
 ---
 
+### analyze_and_validate_refactoring()
+
+**Integrated crash + regression gate** — Runs crash analysis and regression validation in one call.
+
+```python
+result = agentlog.analyze_and_validate_refactoring(
+    baseline_session=None,  # Auto-resolve from saved baselines (prefers "stable")
+    new_session=None,       # Defaults to current active session
+    strict_mode=False       # Passed to validate_refactoring
+)
+```
+
+**Returns:** `dict` with keys:
+- `crash_analysis` (dict) — Output of `analyze_crash()`
+- `regression_validation` (dict|None) — Output of `validate_refactoring()` when baseline/session exist
+- `baseline_session_used` (str|None)
+- `new_session_used` (str|None)
+- `recommendation` (str)
+
+---
+
 ### visualize_agent_flow()
 
 **Multi-agent flow visualizer** — Shows data flow between agents.

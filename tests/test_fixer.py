@@ -12,6 +12,7 @@ from agentlog._fixer import (
     _generate_fix,
     fix_this_crash,
     analyze_crash,
+    analyze_and_validate_refactoring,
 )
 
 
@@ -230,3 +231,52 @@ class TestIntegration:
         assert fix_code is not None
         assert len(fix_code) > 0
         assert 'if not' in fix_code
+
+
+class TestAnalyzeAndValidateRefactoring:
+    """Test integrated crash analysis + regression validation helper."""
+
+    def test_uses_stable_baseline_and_validates(self, monkeypatch):
+        monkeypatch.setattr(
+            "agentlog._fixer.analyze_crash",
+            lambda session_id=None: {"has_error": True, "error_type": "ValueError"},
+        )
+        monkeypatch.setattr(
+            "agentlog._regression.get_baseline",
+            lambda baseline_id: {"session_id": "sess_base"} if baseline_id == "stable" else None,
+        )
+        monkeypatch.setattr("agentlog._regression.list_baselines", lambda: [])
+        monkeypatch.setattr("agentlog._session.get_session_id", lambda: "sess_new")
+
+        captured = {}
+
+        def fake_validate(baseline_session, new_session, strict_mode=False):
+            captured["baseline_session"] = baseline_session
+            captured["new_session"] = new_session
+            captured["strict_mode"] = strict_mode
+            return {"safe_to_merge": True, "decision": "safe"}
+
+        monkeypatch.setattr("agentlog._validate.validate_refactoring", fake_validate)
+
+        result = analyze_and_validate_refactoring()
+
+        assert captured["baseline_session"] == "sess_base"
+        assert captured["new_session"] == "sess_new"
+        assert result["baseline_session_used"] == "sess_base"
+        assert result["new_session_used"] == "sess_new"
+        assert result["regression_validation"]["safe_to_merge"] is True
+
+    def test_no_baseline_skips_validation(self, monkeypatch):
+        monkeypatch.setattr(
+            "agentlog._fixer.analyze_crash",
+            lambda session_id=None: {"has_error": False},
+        )
+        monkeypatch.setattr("agentlog._regression.get_baseline", lambda baseline_id: None)
+        monkeypatch.setattr("agentlog._regression.list_baselines", lambda: [])
+        monkeypatch.setattr("agentlog._session.get_session_id", lambda: "sess_new")
+
+        result = analyze_and_validate_refactoring()
+
+        assert result["regression_validation"] is None
+        assert result["baseline_session_used"] is None
+        assert "no baseline" in result["recommendation"].lower()
