@@ -15,6 +15,7 @@ def reset_agentlog():
     import agentlog
     from agentlog import _core, _emit, _buffer
     from agentlog._redaction import reset_redaction
+    from agentlog._store import disable_incident_store
 
     # Enable for tests
     _core._enabled = True
@@ -39,8 +40,10 @@ def reset_agentlog():
     from collections import deque
     _buffer._ringbuffer = deque(maxlen=500)
     reset_redaction()
+    disable_incident_store()
 
     yield
 
     # Cleanup
     _core._enabled = None
+    disable_incident_store()

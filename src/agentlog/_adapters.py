@@ -1,15 +1,64 @@
 """
-Lightweight framework adapters for agentlog.
+Lightweight adapters for agentlog.
 
-Provides simple integration patterns for common Python frameworks
+Provides simple integration patterns for common Python observability tools
 without creating hard dependencies.
 """
 
-from typing import Any, Callable, Optional
+import logging
+from typing import Any, Callable, Dict, Optional
 from functools import wraps
 
 from ._core import is_enabled
-from ._api import log_http
+from ._api import log, log_error, log_http
+
+
+# ---------------------------------------------------------------------------
+# stdlib logging / structlog adapters
+# ---------------------------------------------------------------------------
+
+class AgentlogLoggingHandler(logging.Handler):
+    """Forward stdlib logging records into agentlog breadcrumbs/errors."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        if not is_enabled():
+            return
+        ctx = {
+            "logger": record.name,
+            "level": record.levelname,
+            "file": record.pathname,
+            "line": record.lineno,
+        }
+        if record.exc_info and record.exc_info[1]:
+            log_error(record.getMessage(), record.exc_info[1], **ctx)
+        else:
+            log(record.getMessage(), **ctx)
+
+
+def install_logging_handler(
+    logger_name: Optional[str] = None,
+    *,
+    level: int = logging.ERROR,
+) -> AgentlogLoggingHandler:
+    """Install a stdlib logging handler that captures records into agentlog."""
+    handler = AgentlogLoggingHandler(level=level)
+    logger = logging.getLogger(logger_name)
+    logger.addHandler(handler)
+    return handler
+
+
+def structlog_processor(logger: Any, method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """structlog-compatible processor that mirrors events into agentlog."""
+    if not is_enabled():
+        return event_dict
+    event = str(event_dict.get("event") or method_name)
+    ctx = {key: value for key, value in event_dict.items() if key not in {"event", "exc_info"}}
+    exc_info = event_dict.get("exc_info")
+    if exc_info and isinstance(exc_info, tuple) and len(exc_info) >= 2 and exc_info[1]:
+        log_error(event, exc_info[1], **ctx)
+    else:
+        log(event, **ctx)
+    return event_dict
 
 
 # ---------------------------------------------------------------------------

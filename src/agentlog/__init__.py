@@ -106,8 +106,11 @@ from ._agent import (
 
 # Schema validation and exports
 from ._schema import (
+    BUNDLE_SCHEMA_VERSION as DEBUG_BUNDLE_SCHEMA_VERSION,
     validate_entry,
     validate_value_descriptor,
+    get_debug_bundle_schema,
+    export_debug_bundle_schema_json,
     export_schema_json,
     export_schema_typescript,
     export_schema_go,
@@ -116,6 +119,9 @@ from ._schema import (
 
 # Framework adapters
 from ._adapters import (
+    AgentlogLoggingHandler,
+    install_logging_handler,
+    structlog_processor,
     fastapi_middleware,
     flask_before_request,
     flask_after_request,
@@ -139,6 +145,17 @@ from ._buffer import (
 from ._sink import (
     to_file,
     close_file,
+)
+
+# Durable incident store
+from ._store import (
+    BUNDLE_SCHEMA_VERSION,
+    configure_incident_store,
+    disable_incident_store,
+    get_incident_store_path,
+    list_incidents,
+    load_incident_entries,
+    export_debug_bundle,
 )
 
 # Automatic failure capture
@@ -296,6 +313,13 @@ def _bootstrap_from_env() -> None:
         except Exception:
             pass
 
+    store_path = os.getenv("AGENTLOG_INCIDENT_STORE", "").strip()
+    if store_path:
+        try:
+            configure_incident_store(store_path)
+        except Exception:
+            pass
+
     buffer_size_raw = os.getenv("AGENTLOG_BUFFER_SIZE", "").strip()
     if buffer_size_raw:
         try:
@@ -365,6 +389,14 @@ __all__ = [
     # File sink
     "to_file",
     "close_file",
+    # Durable incident store
+    "BUNDLE_SCHEMA_VERSION",
+    "configure_incident_store",
+    "disable_incident_store",
+    "get_incident_store_path",
+    "list_incidents",
+    "load_incident_entries",
+    "export_debug_bundle",
     # Automatic failure capture
     "install_failure_hook",
     "uninstall_failure_hook",
@@ -466,11 +498,17 @@ __all__ = [
     # Schema validation
     "validate_entry",
     "validate_value_descriptor",
+    "DEBUG_BUNDLE_SCHEMA_VERSION",
+    "get_debug_bundle_schema",
+    "export_debug_bundle_schema_json",
     "export_schema_json",
     "export_schema_typescript",
     "export_schema_go",
     "validate_jsonl_file",
     # Framework adapters
+    "AgentlogLoggingHandler",
+    "install_logging_handler",
+    "structlog_processor",
     "fastapi_middleware",
     "flask_before_request",
     "flask_after_request",

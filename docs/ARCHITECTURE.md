@@ -61,6 +61,28 @@ In-memory event storage facade:
 The ringbuffer is intentionally simple. More durable stores should implement the
 same "list of event dicts" handoff shape and reuse `_context`.
 
+### `agentlog._store`
+
+Durable incident storage and bundle export:
+
+- append-only JSONL incident store
+- incident listing by `incident_id`
+- stored-entry loading by `incident_id` or `session_id`
+- versioned JSON/Markdown/text debug bundle export
+
+This layer persists sanitized emitted entries and delegates context assembly to
+`_context`, so stored bundles and live bundles follow the same selection rules.
+
+### `agentlog.cli`
+
+Command-line handoff workflow:
+
+- `agentlog incidents list`
+- `agentlog incidents inspect <incident_id>`
+- `agentlog incidents export <incident_id>`
+
+The CLI reads the JSONL store and exports bounded artifacts for coding agents.
+
 ## Compatibility Modules
 
 Older modules remain available:

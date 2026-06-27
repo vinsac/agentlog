@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # Core schema version
 SCHEMA_VERSION = "1.0"
+BUNDLE_SCHEMA_VERSION = "agentlog.debug_bundle.v1"
 
 
 def get_base_schema() -> Dict[str, Any]:
@@ -298,6 +299,30 @@ def export_schema_json() -> str:
     }
     
     return json.dumps(schema, indent=2)
+
+
+def get_debug_bundle_schema() -> Dict[str, Any]:
+    """Get the JSON schema for exported debug bundles."""
+    return {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Agentlog Debug Bundle",
+        "description": "Versioned handoff artifact for coding agents",
+        "type": "object",
+        "required": ["schema_version", "token_budget", "event_count", "context"],
+        "properties": {
+            "schema_version": {"const": BUNDLE_SCHEMA_VERSION},
+            "incident_id": {"type": ["string", "null"]},
+            "session_id": {"type": ["string", "null"]},
+            "token_budget": {"type": "integer", "minimum": 1},
+            "event_count": {"type": "integer", "minimum": 0},
+            "context": {"type": "string"},
+        },
+    }
+
+
+def export_debug_bundle_schema_json() -> str:
+    """Export the debug-bundle JSON schema."""
+    return json.dumps(get_debug_bundle_schema(), indent=2)
 
 
 def export_schema_typescript() -> str:

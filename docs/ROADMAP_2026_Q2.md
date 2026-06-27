@@ -36,14 +36,14 @@ The roadmap should serve three verbs:
 
 Goal: teams trust the debug bundle enough to hand it to a coding agent.
 
-- [ ] Define a stable incident/event schema.
-- [ ] Add first-class redaction policies for secrets, PII, allowlists, and
+- [x] Define a stable incident/event schema.
+- [x] Add first-class redaction policies for secrets, PII, allowlists, and
   denylists.
-- [ ] Add field-level inclusion/drop metadata.
-- [ ] Make `get_debug_context()` explain budget usage and selection reasons.
-- [ ] Add incident/session store abstraction separate from the in-memory buffer.
-- [ ] Keep stdlib-only install path.
-- [ ] Add compatibility tests for existing v1 API names.
+- [x] Add field-level inclusion/drop metadata.
+- [x] Make `get_debug_context()` explain budget usage and selection reasons.
+- [x] Add incident/session store abstraction separate from the in-memory buffer.
+- [x] Keep stdlib-only install path.
+- [x] Add compatibility tests for existing v1 API names.
 
 Success metric:
 
@@ -55,13 +55,13 @@ Success metric:
 Goal: capture enough causal context without turning into an observability
 platform.
 
-- [ ] stdlib logging adapter.
-- [ ] structlog adapter.
-- [ ] OpenTelemetry trace/span correlation.
-- [ ] optional OTLP export hooks.
-- [ ] LLM call capture helper.
-- [ ] tool call capture helper.
-- [ ] decision capture helper.
+- [x] stdlib logging adapter.
+- [x] structlog adapter.
+- [x] OpenTelemetry trace/span correlation.
+- [x] optional OTLP export hooks.
+- [x] LLM call capture helper.
+- [x] tool call capture helper.
+- [x] decision capture helper.
 - [ ] framework examples for API services and workers.
 
 Success metric:
@@ -73,10 +73,10 @@ Success metric:
 
 Goal: make incident context easy to inspect, export, and attach to agent tasks.
 
-- [ ] CLI: list incidents.
-- [ ] CLI: inspect incident.
-- [ ] CLI: export debug bundle.
-- [ ] JSON and Markdown bundle formats.
+- [x] CLI: list incidents.
+- [x] CLI: inspect incident.
+- [x] CLI: export debug bundle.
+- [x] JSON and Markdown bundle formats.
 - [ ] optional MCP resource formatting.
 - [ ] docs for Codex, Claude Code, Cursor, and internal agents as consumers of
   exported bundles.
@@ -116,8 +116,8 @@ These can remain in the codebase, but should not lead README or product docs:
 - [x] Replace README positioning with runtime-context-layer framing.
 - [x] Add `docs/PRODUCT_VISION.md`.
 - [x] Update market research with critical positioning decision.
-- [ ] Rewrite `docs/API_REFERENCE.md` to put core context APIs first.
-- [ ] Move advanced features into an "optional workflows" section.
+- [x] Rewrite `docs/API_REFERENCE.md` to put core context APIs first.
+- [x] Move advanced features into an "optional workflows" section.
 - [ ] Update examples so the default path is capture -> `get_debug_context()` ->
   handoff.
 

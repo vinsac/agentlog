@@ -34,6 +34,7 @@ That artifact is `get_debug_context()`.
 ```bash
 pip install agentlog
 export AGENTLOG=true
+export AGENTLOG_INCIDENT_STORE=.agentlog/incidents.jsonl
 ```
 
 ```python
@@ -65,6 +66,23 @@ Example output:
 Give that bundle to Codex, Claude Code, Cursor, an internal repair agent, or a
 human reviewer. The value is not autonomous fixing. The value is deterministic
 handoff context.
+
+For incidents that need to survive process exit, use the durable JSONL store:
+
+```python
+import agentlog
+
+agentlog.configure_incident_store(".agentlog/incidents.jsonl")
+agentlog.capture_decision("route_payment", "manual_review", incident_id="inc_123")
+agentlog.log_error("authorization failed", error, incident_id="inc_123")
+```
+
+Then export a bounded handoff bundle:
+
+```bash
+agentlog incidents list
+agentlog incidents export inc_123 --tokens 4000 --format markdown
+```
 
 ## Core Use Cases
 
@@ -98,6 +116,9 @@ The public surface is intentionally small:
 | `start_session(name, task=None)` / `end_session()` | Correlate events into a handoff scope. |
 | `get_debug_context(token_budget=4000, incident_id=None, scope=None)` | Export token-budgeted, failure-prioritized context. |
 | `configure_redaction(...)` | Configure deny fields, allowlists, PII fields, and custom regexes. |
+| `configure_incident_store(path)` | Persist emitted events for later incident export. |
+| `export_debug_bundle(incident_id=..., format="json")` | Export a versioned stored bundle. |
+| `install_logging_handler(...)` / `structlog_processor` | Mirror existing logs into agentlog context. |
 
 Additional modules for OpenTelemetry export, MCP formatting, file sinks,
 regression checks, and analytics are optional adapters around this core.

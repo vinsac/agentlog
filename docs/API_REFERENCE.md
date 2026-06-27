@@ -135,6 +135,91 @@ context all pass through the same redaction policy.
 
 ---
 
+## Durable Handoff API
+
+Use these when context must survive process exit or be exported by an on-call
+engineer later.
+
+### configure_incident_store()
+
+Enable durable JSONL incident storage.
+
+```python
+agentlog.configure_incident_store(".agentlog/incidents.jsonl")
+```
+
+The same path can also be enabled with:
+
+```bash
+export AGENTLOG_INCIDENT_STORE=.agentlog/incidents.jsonl
+```
+
+### list_incidents()
+
+List stored incident summaries.
+
+```python
+incidents = agentlog.list_incidents(".agentlog/incidents.jsonl", limit=50)
+```
+
+### load_incident_entries()
+
+Load raw stored event dictionaries.
+
+```python
+entries = agentlog.load_incident_entries("inc_123", path=".agentlog/incidents.jsonl")
+```
+
+### export_debug_bundle()
+
+Export a stored incident as a versioned handoff artifact.
+
+```python
+bundle = agentlog.export_debug_bundle(
+    incident_id="inc_123",
+    path=".agentlog/incidents.jsonl",
+    token_budget=4000,
+    format="markdown",  # "text", "json", or "markdown"
+)
+```
+
+JSON exports include `schema_version`, `incident_id`, `session_id`,
+`token_budget`, `event_count`, and `context`.
+
+### CLI
+
+```bash
+agentlog incidents list --store .agentlog/incidents.jsonl
+agentlog incidents inspect inc_123 --store .agentlog/incidents.jsonl
+agentlog incidents export inc_123 --tokens 4000 --format markdown
+```
+
+### Bundle Schema
+
+```python
+schema = agentlog.get_debug_bundle_schema()
+schema_json = agentlog.export_debug_bundle_schema_json()
+```
+
+---
+
+## Logging Integrations
+
+### install_logging_handler()
+
+Mirror stdlib logging records into agentlog.
+
+```python
+handler = agentlog.install_logging_handler("my.service", level=logging.ERROR)
+```
+
+### structlog_processor
+
+Add `agentlog.structlog_processor` to a structlog processor chain to mirror
+events into agentlog while leaving the original event dictionary unchanged.
+
+---
+
 ## Optional Analysis Helpers
 
 These functions can be useful, but they are not the core product. Treat their

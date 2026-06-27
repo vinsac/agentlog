@@ -8,6 +8,8 @@ import json
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
+_INSTRUMENTATION_VERSION = "2.0.0"
+
 
 # ---------------------------------------------------------------------------
 # OTEL Attribute Mapping
@@ -40,16 +42,21 @@ def _convert_to_otel_attributes(entry: Dict[str, Any]) -> Dict[str, Any]:
     elif tag == "llm":
         if "model" in entry:
             attrs["llm.model"] = entry["model"]
+            attrs["gen_ai.request.model"] = entry["model"]
+            attrs["gen_ai.response.model"] = entry["model"]
         if "tokens_in" in entry:
             attrs["llm.tokens.input"] = entry["tokens_in"]
+            attrs["gen_ai.usage.input_tokens"] = entry["tokens_in"]
         if "tokens_out" in entry:
             attrs["llm.tokens.output"] = entry["tokens_out"]
+            attrs["gen_ai.usage.output_tokens"] = entry["tokens_out"]
         if "ms" in entry:
             attrs["llm.duration_ms"] = entry["ms"]
     
     elif tag == "tool":
         if "tool" in entry:
             attrs["tool.name"] = entry["tool"]
+            attrs["gen_ai.tool.name"] = entry["tool"]
         if "success" in entry:
             attrs["tool.success"] = entry["success"]
         if "ms" in entry:
@@ -120,7 +127,7 @@ def to_otlp_logs(
     # Build ResourceLogs
     resource_attrs = resource_attributes or {}
     resource_attrs["service.name"] = resource_attrs.get("service.name", "agentlog")
-    resource_attrs["service.version"] = resource_attrs.get("service.version", "1.0.0")
+    resource_attrs["service.version"] = resource_attrs.get("service.version", _INSTRUMENTATION_VERSION)
     
     log_records = []
     for entry in entries:
@@ -154,7 +161,7 @@ def to_otlp_logs(
             "scopeLogs": [{
                 "scope": {
                     "name": "agentlog",
-                    "version": "1.0.0"
+                    "version": _INSTRUMENTATION_VERSION
                 },
                 "logRecords": log_records
             }]
@@ -284,7 +291,7 @@ def to_otlp_spans(
             "scopeSpans": [{
                 "scope": {
                     "name": "agentlog",
-                    "version": "1.0.0"
+                    "version": _INSTRUMENTATION_VERSION
                 },
                 "spans": spans
             }]

@@ -80,3 +80,16 @@ def test_explain_mode_reports_budget_drops():
     assert "# budget:" in context
     assert "# selection:" in context
     assert "important failure" in context
+
+
+def test_exception_messages_and_tracebacks_are_redacted():
+    try:
+        raise RuntimeError("failed with Bearer abcdefghijklmnop")
+    except RuntimeError as error:
+        agentlog.capture_tool_call("charge_card", error=error, incident_id="inc_secret")
+        agentlog.log_error("charge failed", error, incident_id="inc_secret")
+
+    context = agentlog.get_debug_context(token_budget=1200, incident_id="inc_secret")
+
+    assert "Bearer abcdefghijklmnop" not in context
+    assert "***BEARER_TOKEN***" in context
