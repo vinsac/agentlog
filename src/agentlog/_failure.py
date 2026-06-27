@@ -44,7 +44,7 @@ def _capture_failure(exc_type, exc_value, exc_traceback):
         locals_dict = {}
         for name, value in frame.f_locals.items():
             try:
-                locals_dict[name] = describe(value)
+                locals_dict[name] = describe(value, field_name=name)
             except Exception:
                 # If we can't describe a value, skip it
                 locals_dict[name] = {"t": "object", "error": "unrepresentable"}

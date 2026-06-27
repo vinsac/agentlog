@@ -188,7 +188,10 @@ def _detect_typeerror_pattern(error_msg: str, locals_dict: Dict[str, Any]) -> Op
                 'explanation': f"{obj_type} is not callable. Remove () or check variable."
             }
     
-    arg_match = re.search(r"takes\s+(\d+)\s+positional\s+argument\s+but\s+(\d+)\s+were\s+given", error_msg)
+    arg_match = re.search(
+        r"takes\s+(\d+)\s+positional\s+arguments?\s+but\s+(\d+)\s+were\s+given",
+        error_msg,
+    )
     if arg_match:
         expected = int(arg_match.group(1))
         given = int(arg_match.group(2))

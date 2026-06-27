@@ -1,14 +1,148 @@
 # AgentLog API Reference
 
-Complete reference for all AgentLog functions.
+Complete reference for agentlog functions.
 
 ---
 
-## 🎯 Clear Winner Features (10X Improvements)
+## Core Context API
+
+These functions are the center of the product. They capture runtime facts and
+export bounded context for coding agents.
+
+### breadcrumb() / log()
+
+Record a structured breadcrumb.
+
+```python
+agentlog.breadcrumb("payment authorization started", request_id=request_id, user_id=user_id)
+agentlog.log("payment authorization started", request_id=request_id, user_id=user_id)
+```
+
+Use this for low-volume facts that help reconstruct a failure path.
+
+### log_error()
+
+Record an exception with traceback and structured context.
+
+```python
+try:
+    authorize_payment(payload)
+except Exception as error:
+    agentlog.log_error("authorization failed", error, request_id=request_id)
+    raise
+```
+
+### log_vars()
+
+Capture compact value descriptors for selected runtime variables.
+
+```python
+agentlog.log_vars(confidence, threshold, payload_shape=payload.keys())
+```
+
+### capture_decision()
+
+Record why code selected one path over another.
+
+```python
+agentlog.capture_decision(
+    "route_payment",
+    "manual_review",
+    candidates=["approve", "manual_review", "decline"],
+    score=0.62,
+    threshold=0.7,
+    incident_id=incident_id,
+)
+```
+
+### capture_tool_call()
+
+Capture a tool or function call summary.
+
+```python
+agentlog.capture_tool_call(
+    "validate_rating",
+    input={"confidence": confidence},
+    output={"valid": True},
+    incident_id=incident_id,
+)
+```
+
+### capture_llm_call()
+
+Capture an LLM interaction summary.
+
+```python
+agentlog.capture_llm_call(
+    "gpt-4.1",
+    input=prompt,
+    output=response_text,
+    usage={"prompt_tokens": usage.prompt_tokens, "completion_tokens": usage.completion_tokens},
+    incident_id=incident_id,
+)
+```
+
+### start_operation() / end_operation()
+
+Capture a bounded operation.
+
+```python
+operation_id = agentlog.start_operation("authorize_payment", request_id=request_id)
+# run operation
+agentlog.end_operation("success", operation_id=operation_id)
+```
+
+### start_session() / end_session()
+
+Correlate events into a handoff scope.
+
+```python
+agentlog.start_session("checkout-api", "debug failed authorization")
+# capture events
+agentlog.end_session()
+```
+
+### get_debug_context()
+
+Export token-budgeted, failure-prioritized context for a coding agent.
+
+```python
+context = agentlog.get_debug_context(
+    token_budget=4000,
+    incident_id=incident_id,
+    include_metadata=True,
+    explain=True,
+)
+```
+
+Returns a string ready to attach to an agent task or incident note. The bundle
+prioritizes errors, session metadata, token usage, and recent relevant events.
+
+### configure_redaction()
+
+Configure redaction policies.
+
+```python
+agentlog.configure_redaction(
+    deny_fields=["customer_id", "authorization"],
+    pii_fields=["email", "phone"],
+    patterns=[r"acct_[A-Za-z0-9]+"],
+)
+```
+
+Nested dictionaries, lists, tool inputs, LLM inputs, locals, and legacy log
+context all pass through the same redaction policy.
+
+---
+
+## Optional Analysis Helpers
+
+These functions can be useful, but they are not the core product. Treat their
+output as suggestions or workflow aids, not as autonomous repair guarantees.
 
 ### fix_this_crash()
 
-**One-shot crash fixer** — Detects error patterns and generates validated fix code.
+Detects common error patterns and generates candidate fix text.
 
 ```python
 code, explanation = agentlog.fix_this_crash(
@@ -19,7 +153,7 @@ code, explanation = agentlog.fix_this_crash(
 
 **Returns:** `(str, str)` — (fix_code, explanation)
 
-**Supported Error Patterns:**
+**Supported error patterns:**
 - `ValueError` — Range violations, type conversion errors, invalid choices
 - `KeyError` — Missing dictionary keys
 - `AttributeError` — NoneType access, wrong type attribute access
@@ -28,23 +162,14 @@ code, explanation = agentlog.fix_this_crash(
 
 **Example:**
 ```python
-# When a crash occurs:
-# ValueError: Confidence 1.5 out of range [0, 1]
-
 code, explanation = agentlog.fix_this_crash()
-# Returns:
-# code = """
-# if not (0 <= confidence <= 1):
-#     raise ValueError(f"confidence must be between 0 and 1, got {confidence}")
-# """
-# explanation = "confidence=1.5 is outside valid range [0, 1]. Add bounds check."
 ```
 
 ---
 
 ### analyze_crash()
 
-**Detailed crash analysis** — Returns comprehensive diagnostic information.
+Returns diagnostic information from captured crash context.
 
 ```python
 analysis = agentlog.analyze_crash(
@@ -66,7 +191,7 @@ analysis = agentlog.analyze_crash(
 
 ### analyze_and_validate_refactoring()
 
-**Integrated crash + regression gate** — Runs crash analysis and regression validation in one call.
+Runs crash analysis and optional regression validation in one call.
 
 ```python
 result = agentlog.analyze_and_validate_refactoring(
@@ -87,7 +212,7 @@ result = agentlog.analyze_and_validate_refactoring(
 
 ### visualize_agent_flow()
 
-**Multi-agent flow visualizer** — Shows data flow between agents.
+Shows session and parent/child flow between agent runs.
 
 ```python
 flow = agentlog.visualize_agent_flow(
@@ -133,7 +258,7 @@ Cascade #1:
 
 ### get_cascade_summary()
 
-**Quick cascade detection** — Returns summary of failure cascades.
+Returns a summary of detected failure cascades.
 
 ```python
 summary = agentlog.get_cascade_summary(
@@ -151,7 +276,7 @@ summary = agentlog.get_cascade_summary(
 
 ### validate_refactoring()
 
-**Regression validator** — Opinionated safe/unsafe decision for refactoring.
+Compares a baseline session to a new session and returns a regression signal.
 
 ```python
 result = agentlog.validate_refactoring(
@@ -183,7 +308,7 @@ result = agentlog.validate_refactoring(
 
 ### quick_validate()
 
-**Quick regression check** — Simple yes/no/maybe result.
+Simple string result for regression checks.
 
 ```python
 result = agentlog.quick_validate(
@@ -196,7 +321,7 @@ result = agentlog.quick_validate(
 
 ---
 
-## Core API
+## Configuration API
 
 ### Configuration
 

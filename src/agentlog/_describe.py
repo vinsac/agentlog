@@ -18,8 +18,9 @@ minimize token usage in LLM context windows:
 """
 
 import json
-import re
 from typing import Any, Dict
+
+from ._redaction import redact_string, sanitize
 
 
 _MAX_SCALAR_LEN = 200
@@ -28,21 +29,12 @@ _MAX_DICT_KEYS = 20
 _MAX_REPR_LEN = 300
 
 
-REDACTION_PATTERNS = [
-    (r'sk-[A-Za-z0-9]{48}', 'openai_api_key'),
-    (r'Bearer [A-Za-z0-9\-._~+/]+=*', 'bearer_token'),
-    (r'password["\']?\s*[:=]\s*["\']([^"\']+)', 'password')
-]
-
 def redact(value: str) -> str:
-    """Redact confidential information from strings."""
-    for pattern, label in REDACTION_PATTERNS:
-        if re.search(pattern, value):
-            return re.sub(pattern, f"***{label.upper()}***", value)
-    return value
+    """Backward-compatible string redaction helper."""
+    return redact_string(value)
 
 
-def describe(value: Any) -> Dict[str, Any]:
+def describe(value: Any, field_name: str = None) -> Dict[str, Any]:
     """Describe a value for AI agent consumption. Compact keys, rich metadata."""
     t = type(value).__name__
     d: Dict[str, Any] = {"t": t}
@@ -61,7 +53,7 @@ def describe(value: Any) -> Dict[str, Any]:
 
     if isinstance(value, str):
         # Redact secrets before truncation
-        safe_value = redact(value)
+        safe_value = redact_string(value, field_name)
         
         if len(safe_value) <= _MAX_SCALAR_LEN:
             d["v"] = safe_value
@@ -72,7 +64,7 @@ def describe(value: Any) -> Dict[str, Any]:
 
     if isinstance(value, bytes):
         d["n"] = len(value)
-        d["v"] = repr(value[:50])
+        d["v"] = redact_string(repr(value[:50]), field_name)
         return d
 
     if isinstance(value, (list, tuple)):
@@ -81,14 +73,17 @@ def describe(value: Any) -> Dict[str, Any]:
             d["it"] = type(value[0]).__name__
         if len(value) <= _MAX_COLLECTION_PREVIEW:
             try:
-                d["v"] = json.loads(json.dumps(value, default=str))
+                d["v"] = sanitize(json.loads(json.dumps(value, default=str)), field_name)
             except (TypeError, ValueError):
-                d["v"] = _safe_repr(value)
+                d["v"] = redact_string(_safe_repr(value), field_name)
         elif len(value) > 0:
             try:
-                d["preview"] = json.loads(json.dumps(value[:3], default=str))
+                d["preview"] = sanitize(
+                    json.loads(json.dumps(value[:3], default=str)),
+                    field_name,
+                )
             except (TypeError, ValueError):
-                d["preview"] = _safe_repr(value[:3])
+                d["preview"] = redact_string(_safe_repr(value[:3]), field_name)
         return d
 
     if isinstance(value, dict):
@@ -96,15 +91,15 @@ def describe(value: Any) -> Dict[str, Any]:
         d["k"] = list(value.keys())[:_MAX_DICT_KEYS]
         if len(value) <= _MAX_COLLECTION_PREVIEW:
             try:
-                d["v"] = json.loads(json.dumps(value, default=str))
+                d["v"] = sanitize(json.loads(json.dumps(value, default=str)))
             except (TypeError, ValueError):
-                d["v"] = _safe_repr(value)
+                d["v"] = redact_string(_safe_repr(value), field_name)
         return d
 
     if isinstance(value, set):
         d["n"] = len(value)
         if len(value) <= 10:
-            d["v"] = _safe_repr(value)
+            d["v"] = redact_string(_safe_repr(value), field_name)
         return d
 
     # numpy / torch / pandas — shape-aware
@@ -139,7 +134,7 @@ def describe(value: Any) -> Dict[str, Any]:
         except Exception:
             pass
 
-    d["v"] = _safe_repr(value)
+    d["v"] = redact_string(_safe_repr(value), field_name)
     return d
 
 

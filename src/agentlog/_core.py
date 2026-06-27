@@ -37,6 +37,7 @@ TAG_LEVELS = {
     "decision": LEVEL_INFO,
     "span": LEVEL_INFO,
     "trace": LEVEL_INFO,
+    "operation": LEVEL_INFO,
     "llm": LEVEL_INFO,      # LLM calls
     "tool": LEVEL_INFO,     # Tool calls
     "prompt": LEVEL_INFO,   # Prompts

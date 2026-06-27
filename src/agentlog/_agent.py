@@ -62,7 +62,7 @@ def log_llm_call(
     data: Dict[str, Any] = {
         "call_id": call_id,
         "model": model,
-        "prompt": describe(prompt),
+        "prompt": describe(prompt, field_name="prompt"),
     }
 
     session_id = get_session_id()
@@ -70,7 +70,7 @@ def log_llm_call(
         data["session_id"] = session_id
     
     if response is not None:
-        data["response"] = describe(response)
+        data["response"] = describe(response, field_name="response")
     
     if duration_ms is not None:
         data["ms"] = round(duration_ms, 1)
@@ -82,7 +82,7 @@ def log_llm_call(
         data["tokens_out"] = tokens_out
     
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     
     emit("llm", data)
     return call_id
@@ -127,18 +127,18 @@ def log_tool_call(
     data: Dict[str, Any] = {
         "call_id": call_id,
         "tool": tool_name,
-        "args": {k: describe(v) for k, v in arguments.items()},
+        "args": {k: describe(v, field_name=k) for k, v in arguments.items()},
         "success": success,
     }
     
     if result is not None:
-        data["result"] = describe(result)
+        data["result"] = describe(result, field_name="result")
     
     if duration_ms is not None:
         data["ms"] = round(duration_ms, 1)
     
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     
     emit("tool", data)
     return call_id
@@ -180,17 +180,17 @@ def log_prompt(
     
     data: Dict[str, Any] = {
         "prompt_id": prompt_id,
-        "prompt": describe(prompt),
+        "prompt": describe(prompt, field_name="prompt"),
     }
     
     if model:
         data["model"] = model
     
     if system:
-        data["system"] = describe(system)
+        data["system"] = describe(system, field_name="system")
     
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     
     emit("prompt", data)
     return prompt_id
@@ -223,7 +223,7 @@ def log_response(
     
     data: Dict[str, Any] = {
         "prompt_id": prompt_id,
-        "response": describe(response),
+        "response": describe(response, field_name="response"),
     }
     
     if duration_ms is not None:
@@ -233,7 +233,7 @@ def log_response(
         data["tokens_out"] = tokens_out
     
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     
     emit("response", data)
 
@@ -273,7 +273,7 @@ def llm_call(model: str, prompt: str, **kwargs: Any):
         data: Dict[str, Any] = {
             "call_id": call_id,
             "model": model,
-            "prompt": describe(prompt),
+            "prompt": describe(prompt, field_name="prompt"),
             "ms": round(duration_ms, 1),
         }
         
@@ -282,7 +282,7 @@ def llm_call(model: str, prompt: str, **kwargs: Any):
             data["session_id"] = session_id
         
         if "response" in call_data:
-            data["response"] = describe(call_data["response"])
+            data["response"] = describe(call_data["response"], field_name="response")
         
         if "tokens_in" in call_data:
             data["tokens_in"] = call_data["tokens_in"]
@@ -291,7 +291,7 @@ def llm_call(model: str, prompt: str, **kwargs: Any):
             data["tokens_out"] = call_data["tokens_out"]
         
         if kwargs:
-            data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+            data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
         
         emit("llm", data)
         
@@ -301,7 +301,7 @@ def llm_call(model: str, prompt: str, **kwargs: Any):
         data = {
             "call_id": call_id,
             "model": model,
-            "prompt": describe(prompt),
+            "prompt": describe(prompt, field_name="prompt"),
             "ms": round(duration_ms, 1),
             "error": {"type": type(e).__name__, "msg": str(e)},
         }
@@ -311,7 +311,7 @@ def llm_call(model: str, prompt: str, **kwargs: Any):
             data["session_id"] = session_id
         
         if kwargs:
-            data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+            data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
         
         emit("llm", data)
         raise
@@ -358,7 +358,7 @@ def tool_call(tool_name: str, arguments: Dict[str, Any], **kwargs: Any):
         data: Dict[str, Any] = {
             "call_id": call_id,
             "tool": tool_name,
-            "args": {k: describe(v) for k, v in arguments.items()},
+            "args": {k: describe(v, field_name=k) for k, v in arguments.items()},
             "ms": round(duration_ms, 1),
             "success": True,
         }
@@ -375,10 +375,10 @@ def tool_call(tool_name: str, arguments: Dict[str, Any], **kwargs: Any):
                     data["sys"]["stderr_truncated"] = len(captured_err)
         
         if "result" in call_data:
-            data["result"] = describe(call_data["result"])
+            data["result"] = describe(call_data["result"], field_name="result")
         
         if kwargs:
-            data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+            data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
         
         emit("tool", data)
         
@@ -388,7 +388,7 @@ def tool_call(tool_name: str, arguments: Dict[str, Any], **kwargs: Any):
         data = {
             "call_id": call_id,
             "tool": tool_name,
-            "args": {k: describe(v) for k, v in arguments.items()},
+            "args": {k: describe(v, field_name=k) for k, v in arguments.items()},
             "ms": round(duration_ms, 1),
             "success": False,
             "error": {"type": type(e).__name__, "msg": str(e)},
@@ -408,7 +408,7 @@ def tool_call(tool_name: str, arguments: Dict[str, Any], **kwargs: Any):
                     data["sys"]["stderr_truncated"] = len(captured_err)
         
         if kwargs:
-            data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+            data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
         
         emit("tool", data)
         raise

@@ -66,7 +66,7 @@ def span(name: str, **kwargs: Any):
     if is_enabled():
         data: Dict[str, Any] = {"span_name": name, "ev": "start"}
         if kwargs:
-            data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+            data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
         emit("span", data, depth=4)
     try:
         yield span_id

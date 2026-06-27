@@ -239,7 +239,7 @@ def get_format_description(format: str) -> str:
         "cursor": "Optimized for Cursor IDE agent context",
         "claude": "Optimized for Claude Code agent context (XML-style)",
         "codex": "Optimized for OpenAI Codex agent context (markdown)",
-        "raw": "Raw JSONL format with comments",
+    "raw": "raw JSONL format with comments",
         "jsonl": "Raw JSONL format (alias for raw)",
     }
     return descriptions.get(format, "Unknown format")

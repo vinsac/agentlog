@@ -1,72 +1,134 @@
-# AgentLog Market Research (Q2 2026): Positioning Decision
+# agentlog Market Research (Q2 2026)
 
-## Question
+## Research Question
 
-Should AgentLog be positioned as editor-specific (Cursor/Claude Code/Codex/Windsurf) or as a generic runtime layer?
+What should agentlog become in a market already crowded with AI observability,
+LLM tracing, eval, prompt-management, and APM products?
 
-## Internet scan (selected sources)
+## Sources Reviewed
 
-1. LangSmith Observability docs
-   - https://docs.langchain.com/langsmith/observability
-   - Signals: tracing, monitoring, automations, feedback loops, RAG tracing.
-2. OpenTelemetry GenAI semantic conventions
-   - https://opentelemetry.io/docs/specs/semconv/gen-ai/
-   - Signals: standard traces/events/metrics for model + agent spans and MCP.
-3. Sentry AI Monitoring docs
-   - https://docs.sentry.io/product/insights/ai/
-   - Signals: production monitoring for agent workflows, tool calls, model interactions, MCP servers.
-4. Arize Phoenix docs
-   - https://arize.com/docs/phoenix
-   - Signals: tracing + evaluations + prompt engineering + datasets/experiments + span replay.
-5. Braintrust evaluation docs
-   - https://www.braintrust.dev/docs/evaluate
-   - Signals: offline eval + online production scoring + continuous feedback loop.
-6. Langfuse observability docs
-   - https://langfuse.com/docs/observability/overview
-   - Signals: prompt/response/tool traces, token/cost/latency visibility, non-deterministic debugging.
-7. Datadog LLM observability docs
-   - https://docs.datadoghq.com/llm_observability/
-   - Signals: end-to-end traces, cost/perf monitoring, quality/safety checks, anomaly detection.
-8. Helicone guides
-   - https://docs.helicone.ai/guides/overview
-   - Signals: replay sessions, CI integrations, environment tracking, evaluation workflows.
+Selected public docs and positioning pages:
 
-## Market pattern summary
+- LangSmith Observability: https://docs.langchain.com/langsmith/observability
+- Langfuse Observability: https://langfuse.com/docs/observability/overview
+- Arize Phoenix docs: https://arize.com/docs/phoenix
+- OpenTelemetry GenAI semantic conventions:
+  https://opentelemetry.io/docs/specs/semconv/gen-ai/
+- Datadog LLM Observability: https://docs.datadoghq.com/llm_observability/
+- Sentry AI Monitoring: https://docs.sentry.io/product/insights/ai/
+- Braintrust evaluations: https://www.braintrust.dev/docs/evaluate
+- Helicone docs: https://docs.helicone.ai/
 
-Across vendors, the common buyer and usage pattern is:
+## Market Pattern
 
-- runtime-first instrumentation (not editor plugins first)
-- production observability + cost/performance visibility
-- evaluation and regression loops connected to traces
-- CI/CD and incident workflows
-- standards/interoperability pressure (OpenTelemetry GenAI)
+The category is converging around:
 
-## User needs implied by market
+- tracing for LLM calls, tools, chains, agents, and MCP servers
+- model cost, latency, token, and quality monitoring
+- prompt iteration and prompt/version management
+- online and offline evals
+- datasets, experiments, feedback, and regression workflows
+- dashboards and production monitoring
+- OpenTelemetry compatibility
 
-1. Work everywhere: APIs, workers, async jobs, CI, prod services.
-2. Low-friction adoption: env-vars, drop-in bootstrap, no heavy setup.
-3. Incident lifecycle support: capture -> replay -> suggested fix -> regression gate.
-4. Proof of value: measurable reduction in iterations/time-to-fix.
-5. Optional tool overlays: editor-specific instructions are useful, but secondary.
+The market already has strong tools for "what happened?", "which trace?",
+"how often?", "how slow?", "what did the model do?", and "did quality regress?"
 
-## Positioning decision
+## Positioning Risk
 
-**Decision: AgentLog should be positioned as a generic runtime observability layer with optional editor overlays.**
+The old repo story competed too broadly:
 
-Why:
+- "runtime observability for AI agents"
+- "one-shot crash fixer"
+- "multi-agent flow visualizer"
+- "regression validator"
+- "team analytics"
+- MCP server positioning
+- broad production workflow claims
 
-- Expands ICP beyond editor users to platform/SRE/backend teams.
-- Aligns with market buying behavior and competitive framing.
-- Better supports production monitoring and incident response narratives.
-- Keeps editor integrations as accelerators, not product identity.
+That makes agentlog sound like a small version of LangSmith, Langfuse, Phoenix,
+Sentry, Datadog, or Braintrust. This is a weak fight. Those products already own
+dashboards, trace stores, eval suites, team workflows, and production monitoring.
 
-## Implementation changes completed
+## Positioning Decision
 
-1. README repositioned to generic runtime + production/development scope.
-2. Quickstarts refactored to runtime-first, with editor sections marked optional.
-3. Usage examples now lead with generic runtime patterns.
-4. Roadmap wording updated to runtime-first quickstarts and market rationale.
+agentlog should be positioned as a runtime context layer for coding agents.
 
-## Next recommendation
+Use this sentence:
 
-Add one consolidated "production deployment guide" (sampling, retention, redaction, PII handling, sink rotation, alert wiring) to strengthen enterprise adoption.
+> agentlog turns live runtime behavior into compact, redactable debug context
+> that coding agents can actually use.
+
+This creates a narrow wedge:
+
+- not a log platform
+- not a tracing backend
+- not a dashboard
+- not a prompt manager
+- not an eval suite
+- not an autonomous repair system
+
+The product is capture, compress, and hand off.
+
+## Differentiator
+
+Most tools optimize for humans viewing traces and dashboards. agentlog should
+optimize for the artifact handed to a coding agent during debugging:
+
+- selected locals
+- error and stack
+- causal breadcrumbs
+- tool and LLM call summaries
+- decision metadata
+- git and environment hints
+- correlation IDs
+- redaction metadata
+- token-budget accounting
+
+The output should be deterministic, compact, and inspectable.
+
+## ICP
+
+Best initial ICP:
+
+- Python backend teams using coding agents for debugging and patching
+- teams with internal AI tools, microservices, and high debugging cost
+- services with tool-heavy, RAG-heavy, async, or decision-heavy flows
+- platform teams standardizing "handoff to agent" workflows
+
+Avoid generic SaaS and broad "AI observability" language until the handoff
+workflow is proven.
+
+## Product Implications
+
+Prioritize:
+
+- stable event schema
+- redaction and field policy engine
+- incident-scoped storage
+- deterministic `get_debug_context()`
+- token budget explanations
+- stdlib logging and OpenTelemetry correlation
+- optional LLM/tool/decision helpers
+- CLI export of incident bundles
+
+De-emphasize in top-level positioning:
+
+- autonomous fix generation
+- team analytics
+- MCP as a product category
+- broad agent workflow orchestration
+- full regression/eval suite claims
+- dashboard-oriented language
+
+## Success Metrics
+
+The product should be evaluated by:
+
+- time to first diagnosis
+- agent turns to valid patch
+- tokens consumed during debugging
+- rate of "cannot reproduce" incidents
+- handoff time from on-call engineer to coding agent
+
+If a feature does not move one of these metrics, it is probably outside the core.

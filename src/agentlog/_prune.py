@@ -215,7 +215,16 @@ def summarize_entries(
         Summary dict with condensed information
     """
     if not entries:
-        return {"summary": "No entries", "total": 0}
+        return {
+            "summary": "No entries",
+            "total": 0,
+            "by_tag": {},
+            "estimated_tokens": 0,
+            "compressed_to": 0,
+            "key_errors": [],
+            "key_decisions": [],
+            "entries": [],
+        }
     
     # Score all entries
     scored = [(score_entry_importance(e), e) for e in entries]
@@ -307,9 +316,6 @@ def prune_context(
                     entries.append(json.loads(line))
                 except json.JSONDecodeError:
                     pass
-    
-    if not entries:
-        return json.dumps({"summary": "No entries to prune"})
     
     if strategy == "errors_only":
         # Keep only errors and session info

@@ -25,7 +25,7 @@ def log(message: str, **kwargs: Any) -> None:
         return
     data: Dict[str, Any] = {"msg": message}
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     emit("info", data)
 
 
@@ -56,17 +56,17 @@ def log_vars(*args: Any, **kwargs: Any) -> None:
                     names = [a.strip() for a in inner.split(",")]
                     for i, val in enumerate(args):
                         name = names[i] if i < len(names) and "=" not in names[i] else f"arg{i}"
-                        variables[name] = describe(val)
+                        variables[name] = describe(val, field_name=name)
                     break
             else:
                 for i, val in enumerate(args):
-                    variables[f"arg{i}"] = describe(val)
+                    variables[f"arg{i}"] = describe(val, field_name=f"arg{i}")
         except Exception:
             for i, val in enumerate(args):
-                variables[f"arg{i}"] = describe(val)
+                variables[f"arg{i}"] = describe(val, field_name=f"arg{i}")
 
     for name, val in kwargs.items():
-        variables[name] = describe(val)
+        variables[name] = describe(val, field_name=name)
 
     emit("vars", {"vars": variables})
 
@@ -82,7 +82,7 @@ def log_state(label: str, state: Any) -> None:
     """
     if not is_enabled():
         return
-    emit("state", {"label": label, "state": describe(state)})
+    emit("state", {"label": label, "state": describe(state, field_name=label)})
 
 
 def log_error(message: str, error: Optional[Exception] = None, **kwargs: Any) -> None:
@@ -103,7 +103,7 @@ def log_error(message: str, error: Optional[Exception] = None, **kwargs: Any) ->
         data["err_msg"] = str(error)
         data["tb"] = traceback.format_exc()
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     emit("error", data)
 
 
@@ -122,7 +122,7 @@ def log_check(condition: bool, message: str, **kwargs: Any) -> bool:
     if not condition:
         data: Dict[str, Any] = {"msg": message, "passed": False}
         if kwargs:
-            data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+            data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
         emit("check", data)
     return condition
 
@@ -149,5 +149,5 @@ def log_http(
     if duration_ms is not None:
         data["ms"] = round(duration_ms, 1)
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     emit("http", data)

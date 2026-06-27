@@ -1,8 +1,9 @@
-# AgentLog Runtime Quickstarts (Generic First)
+# agentlog Runtime Quickstarts
 
-This guide is intentionally **runtime-first** and **editor-agnostic**.
+This guide is runtime-first and editor-agnostic.
 
-Use it in services, workers, CI pipelines, and incident-response workflows.
+Use it in services, workers, CI pipelines, and incident-response workflows to
+capture compact debug context for coding agents.
 Editor-specific instructions (Cursor, Claude Code, Codex, Windsurf) are optional overlays.
 
 ## Shared zero-config bootstrap (recommended)
@@ -39,8 +40,8 @@ def handle_request(request_id: str) -> dict:
         return result
     except Exception as exc:
         agentlog.log_error("request failed", exc, request_id=request_id)
-        fix_code, explanation = agentlog.fix_this_crash()
-        agentlog.log("fix_suggestion", preview=fix_code[:120], explanation=explanation)
+        context = agentlog.get_debug_context(max_tokens=4000)
+        attach_to_incident_or_agent_task(context)
         agentlog.tag_outcome("failure", 1.0, str(exc))
         raise
     finally:
@@ -78,9 +79,8 @@ agentlog.enable()
 agentlog.start_session("ci", "pull-request-validation")
 
 # ... run checks/tests ...
-result = agentlog.analyze_and_validate_refactoring()
-if result["regression_validation"] and not result["regression_validation"]["safe_to_merge"]:
-    raise SystemExit("AgentLog regression gate failed")
+context = agentlog.get_debug_context(max_tokens=4000)
+write_ci_artifact("agentlog-debug-context.txt", context)
 
 agentlog.tag_outcome("success", 1.0, "ci checks passed")
 agentlog.end_session()
@@ -96,9 +96,9 @@ Add this to `.cursorrules`:
 
 ```text
 When a command/test fails:
-1) call agentlog.analyze_crash()
-2) call agentlog.fix_this_crash() and propose smallest safe patch
-3) run validate_refactoring against baseline before merge
+1) call agentlog.get_debug_context(max_tokens=4000)
+2) use the context as the primary failure bundle
+3) use analysis/fix helpers only as optional supporting evidence
 ```
 
 Minimal bootstrap in your app entrypoint:
@@ -113,9 +113,8 @@ agentlog.start_session("cursor", "feature-task")
 Debug loop command:
 
 ```python
-analysis = agentlog.analyze_crash()
-fix_code, explanation = agentlog.fix_this_crash()
-combined = agentlog.analyze_and_validate_refactoring()
+context = agentlog.get_debug_context(max_tokens=4000)
+analysis = agentlog.analyze_crash()  # optional
 ```
 
 ---
@@ -126,9 +125,9 @@ Add this to project instructions:
 
 ```text
 Use AgentLog for failures and regressions:
-- analyze_crash for root cause context
-- fix_this_crash for first candidate patch
-- analyze_and_validate_refactoring before final answer
+- get_debug_context for the failure handoff bundle
+- analyze_crash as optional supporting detail
+- quick_validate as an optional regression signal
 ```
 
 Session pattern:
@@ -189,8 +188,8 @@ Add this to `.windsurfrules`:
 ```text
 If AGENTLOG=true is present:
 - inspect get_debug_context() on failures
-- use fix_this_crash() for first patch proposal
-- check quick_validate() before task completion
+- use analysis helpers only after reading the debug context
+- check quick_validate() only when a baseline exists
 ```
 
 Operational session pattern:
@@ -209,10 +208,11 @@ agentlog.end_session()
 
 ## Development + production usage model
 
-AgentLog supports both:
+agentlog supports both:
 
-- **Development:** local crash context, fix suggestions, refactor validation.
-- **Production:** structured error/session logs, incident replay from JSONL, and outcome/regression analytics.
+- **Development:** local crash context and agent handoff bundles.
+- **Production:** structured error/session context, incident replay from JSONL,
+  and optional outcome/regression signals.
 
 Typical deployment pattern:
 

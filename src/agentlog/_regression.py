@@ -200,7 +200,10 @@ def detect_regression(
     
     # Get outcomes
     current_outcome = get_outcome(session_id)
-    baseline_outcome = baseline.get("outcome")
+    baseline_outcome_data = get_outcome(baseline_session) if baseline_session else None
+    baseline_outcome = baseline.get("outcome") or (
+        baseline_outcome_data.get("outcome") if baseline_outcome_data else None
+    )
     
     outcome_regression = False
     if baseline_outcome == "success" and current_outcome:
@@ -226,7 +229,8 @@ def detect_regression(
 
 def compare_to_baseline(
     metric: str = "error_count",
-    baseline_id: str = "stable"
+    baseline_id: str = "stable",
+    session_id: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     Compare a specific metric to baseline.
@@ -242,13 +246,14 @@ def compare_to_baseline(
     from ._correlation import get_all_patterns
     from ._outcome import get_outcome
     
-    current_session = get_session_id()
     baseline = get_baseline(baseline_id)
+    baseline_session = baseline.get("session_id") if baseline else None
+    current_session = session_id or get_session_id()
+    if not current_session and baseline_session:
+        current_session = _infer_current_session(baseline_session)
     
     if not baseline or not current_session:
         return None
-    
-    baseline_session = baseline.get("session_id")
     
     if metric == "error_count":
         all_patterns = get_all_patterns()
@@ -284,6 +289,17 @@ def compare_to_baseline(
             )
         }
     
+    return None
+
+
+def _infer_current_session(baseline_session: str) -> Optional[str]:
+    """Infer the non-baseline session from recorded error patterns."""
+    from ._correlation import get_all_patterns
+
+    for pattern in get_all_patterns().values():
+        for session in reversed(pattern.get("sessions", [])):
+            if session != baseline_session:
+                return session
     return None
 
 

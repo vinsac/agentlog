@@ -14,6 +14,7 @@ def reset_agentlog():
     """Reset agentlog state before each test."""
     import agentlog
     from agentlog import _core, _emit, _buffer
+    from agentlog._redaction import reset_redaction
 
     # Enable for tests
     _core._enabled = True
@@ -37,6 +38,7 @@ def reset_agentlog():
     # Reset ringbuffer
     from collections import deque
     _buffer._ringbuffer = deque(maxlen=500)
+    reset_redaction()
 
     yield
 

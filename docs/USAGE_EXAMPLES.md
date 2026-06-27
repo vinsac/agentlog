@@ -1,6 +1,7 @@
 # AgentLog Usage Examples
 
-Real-world integration patterns for runtime observability in AI/LLM systems.
+Real-world integration patterns for capturing runtime context and handing it to
+coding agents.
 
 ---
 
@@ -15,6 +16,29 @@ These patterns are editor-agnostic and work for services, workers, and CI.
 
 ---
 
+## Core Pattern: Capture, Compress, Hand Off
+
+```python
+import agentlog
+
+agentlog.start_session("checkout-api", "debug authorization failure")
+
+try:
+    run_checkout()
+except Exception as error:
+    agentlog.log_error("checkout failed", error, request_id=request_id)
+    context = agentlog.get_debug_context(max_tokens=4000)
+    send_to_agent_or_incident_ticket(context)
+    raise
+finally:
+    agentlog.end_session()
+```
+
+Use this pattern before reaching for optional fix, validation, flow, or analytics
+helpers.
+
+---
+
 ## Cursor Integration
 
 ### Setup
@@ -24,11 +48,11 @@ Add to your `.cursorrules` or project instructions:
 ```
 When debugging crashes in this codebase:
 1. Check if agentlog has captured the crash context
-2. Use agentlog.fix_this_crash() to get automatic fix suggestions
-3. Review the generated fix before applying
+2. Use agentlog.get_debug_context() as the primary incident bundle
+3. Treat fix helpers as optional suggestions, not automatic patches
 ```
 
-### Pattern 1: Automatic Crash Recovery
+### Pattern 1: Debug Context Handoff
 
 ```python
 # In your main application entry point
@@ -41,15 +65,8 @@ def main():
     try:
         run_feature()
     except Exception:
-        # AgentLog has already captured locals automatically
-        # Now get the fix
-        code, explanation = agentlog.fix_this_crash()
-        
-        print(f"\n🔧 Auto-generated fix:\n{code}")
-        print(f"\n💡 Explanation: {explanation}")
-        
-        # Log the fix attempt
-        agentlog.log("fix_attempt", fix_code=code[:200])
+        context = agentlog.get_debug_context(max_tokens=4000)
+        print(context)
         raise
     finally:
         agentlog.end_session()
@@ -140,17 +157,14 @@ Add to your Claude Code project context:
 
 ```
 This project uses agentlog for debugging. Key commands:
-- agentlog.fix_this_crash() — Get automatic fix for current crash
-- agentlog.visualize_agent_flow() — Debug multi-agent cascades  
-- agentlog.validate_refactoring(baseline, new) — Check if refactoring is safe
+- agentlog.get_debug_context() - Export the primary failure handoff bundle
+- agentlog.analyze_crash() - Inspect captured crash facts
+- agentlog.validate_refactoring(baseline, new) - Optional regression signal
 ```
 
-### Pattern 1: Debug Loop Reduction
+### Pattern 1: Debug Context Handoff
 
 ```python
-# Traditional: 5 iterations of guess-and-check
-# With AgentLog: 1 iteration with full context
-
 import agentlog
 
 agentlog.start_session("claude", "debug production issue")
@@ -159,7 +173,10 @@ agentlog.start_session("claude", "debug production issue")
 try:
     reproduce_issue()
 except Exception as e:
-    # Get everything in one call
+    context = agentlog.get_debug_context(max_tokens=4000)
+    print(context)
+
+    # Optional supporting analysis
     analysis = agentlog.analyze_crash()
     
     if analysis["has_error"]:
@@ -175,9 +192,6 @@ except Exception as e:
         
         print(f"\n   Variables at crash: {', '.join(analysis['variables_at_crash'])}")
         
-        if analysis["suggested_fix"]:
-            print(f"\n💡 Suggested fix:\n{analysis['suggested_fix']}")
-
 agentlog.end_session()
 ```
 
@@ -200,7 +214,6 @@ if exit_code == 0:
 else:
     agentlog.tag_outcome("failure", 1.0, f"Tests failed with exit code {exit_code}")
     
-    # In CI, we can still get fix suggestions for logged errors
     context = agentlog.get_debug_context(max_tokens=2000)
     print("\n📋 Debug context for failed run:")
     print(context)
@@ -481,7 +494,7 @@ export AGENTLOG_FILE=./logs/agentlog.jsonl
 
 1. **Always use sessions** — Correlates all events in a logical unit
 2. **End sessions properly** — Ensures data is flushed and tagged
-3. **Use the 10X features** — They're the reason AgentLog exists
+3. **Start with debug context** — optional helpers should support the handoff, not replace it
 4. **Set baselines before refactoring** — Enables automatic validation
 5. **Check cascades in multi-agent setups** — Finds root causes faster
 6. **Export debug context to AI agents** — One function call = complete context

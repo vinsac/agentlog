@@ -1,64 +1,33 @@
 # agentlog
 
-**Runtime observability for AI agents and LLM-powered applications (development + production).**
+**Compact, redactable runtime context for coding agents.**
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)]()
 
----
+agentlog turns live runtime behavior into compact, redactable debug context that
+coding agents can actually use.
 
-Your app crashed at 3am. Your AI coding agent sees this:
+It is not a logging platform, tracing backend, dashboard, prompt manager, or eval
+suite. Use OpenTelemetry, Sentry, Datadog, Langfuse, Phoenix, LangSmith, or your
+existing log stack for those jobs. agentlog sits beside them and answers one
+narrow question:
 
-```
-ValueError: Confidence 1.5 out of valid range [0, 1]
-  File "app.py", line 30, in normalize_score
-```
-
-The agent adds a try/except. Wrong fix. It adds print statements. Reruns. Still guessing.
-**Five debugging turns later**, it finds that `validate_rating()` accepted `1.5` as valid.
-
-With agentlog, the agent sees this instead:
-
-```
-# agentlog debug context (session: sess_10a491b4)
-# git: main@2c53442
-# tokens: 230 total (gpt-4: 150in/80out)
-
-{"tag":"error","err":"ValueError","err_msg":"Confidence 1.5 out of valid range [0, 1]",
- "locals":{"confidence":{"t":"float","v":1.5},"threshold":{"t":"float","v":0.7}}}
-
-{"tag":"tool","tool":"validate_rating","args":{"confidence":{"v":1.5},"threshold":{"v":0.7}},"success":true}
-```
-
-One turn. The agent sees `validate_rating` returned `success: true` for `confidence: 1.5`.
-The bug is obvious: missing upper-bound check. **Fixed in one shot.**
+> What exact execution context should I hand to a coding agent so it can debug
+> this failure with fewer guesses?
 
 ## Why This Exists
 
-AI agents can read your source code. They **cannot** see:
+Tracebacks show where code failed. Production logs show what happened, but often
+as thousands of lines of noisy text. LLM tracing tools show prompts, responses,
+costs, latency, and tool spans.
 
-- What your variables contained when the crash happened
-- Which code path actually executed
-- What data shapes flowed through your pipeline
-- Why a function was called with unexpected arguments
+Coding agents need a smaller artifact: the relevant exception, stack, locals,
+breadcrumbs, decisions, tool calls, LLM calls, correlation IDs, git metadata, and
+payload summaries, already redacted and sized for a context window.
 
-agentlog captures this automatically. No print statements needed.
-
-## Positioning: Generic Runtime Layer (not editor-bound)
-
-agentlog is intentionally **editor-agnostic**.
-
-- Works in API services, workers, pipelines, and CI jobs
-- Works in production and development
-- Editor/IDE playbooks (Cursor, Claude Code, Codex, Windsurf) are optional overlays
-
-Start here for generic patterns:
-
-- `docs/QUICKSTART_RECIPES.md` (runtime-first quickstarts)
-- `docs/PRODUCTION_DEPLOYMENT_GUIDE.md`
-- `docs/INCIDENT_REPLAY_WORKFLOW.md`
-- `docs/CI_TEMPLATES.md`
+That artifact is `get_debug_context()`.
 
 ## Quick Start
 
@@ -70,155 +39,138 @@ export AGENTLOG=true
 ```python
 import agentlog
 
-# Automatic failure capture — locals at crash point
-# Nothing to instrument, just enable and go
+agentlog.start_session("checkout-api", "debug failed payment authorization")
 
-# After a crash, get an automatic fix in one shot:
-code, explanation = agentlog.fix_this_crash()
+try:
+    result = authorize_payment(payload)
+except Exception as error:
+    agentlog.log_error("authorization failed", error, request_id=request_id)
+    debug_context = agentlog.get_debug_context(max_tokens=4000)
+    raise
 ```
 
-### 🎯 The 10X Features
+Example output:
 
-**Fix crashes in one shot instead of 5 attempts:**
+```text
+# agentlog debug context (session: sess_10a491b4)
+# git: main@2c53442 dirty
+# tokens: 230 total (gpt-4: 150in/80out)
 
-```python
-# One-shot crash fixer ⭐
-code, explanation = agentlog.fix_this_crash()
-# Returns: validated fix code + explanation
-
-# Multi-agent cascade visualizer 🌊  
-flow = agentlog.visualize_agent_flow()
-# Shows: Agent A → Agent B → Error in Agent C
-
-# Regression validator ✅
-result = agentlog.validate_refactoring("baseline", "new")
-# Returns: safe_to_merge, confidence_score, blocking_issues
+{"tag":"error","err":"ValueError","err_msg":"Confidence 1.5 out of valid range [0, 1]",
+ "ctx":{"request_id":{"t":"str","v":"req_91d2"}}}
+{"tag":"vars","vars":{"confidence":{"t":"float","v":1.5},"threshold":{"t":"float","v":0.7}}}
+{"tag":"tool","tool":"validate_rating","args":{"confidence":{"t":"float","v":1.5}},"success":true}
 ```
 
-### Session Tracking
+Give that bundle to Codex, Claude Code, Cursor, an internal repair agent, or a
+human reviewer. The value is not autonomous fixing. The value is deterministic
+handoff context.
 
-```python
-agentlog.start_session("my_agent", "refactoring task")
+## Core Use Cases
 
-# All events within this session are correlated
-# Git state (commit, branch, dirty) captured automatically
+- **Crash to fix context** - capture exception type, message, stack, selected
+  locals, correlation IDs, recent breadcrumbs, tool/LLM calls, git metadata, and
+  redacted payload summaries.
+- **Bad decision reconstruction** - capture candidates, chosen option, score,
+  threshold, reason fields, upstream input summary, downstream outcome, and
+  related events.
+- **Flaky workflow replay context** - preserve ordered breadcrumbs, retries,
+  external dependency behavior, feature flags, environment hints, and recent
+  tool calls without dumping raw logs.
+- **Human-to-agent handoff** - export a bounded incident bundle instead of
+  asking an agent to scrape unstructured logs.
+- **Agent regression triage** - group similar failures and surface common runtime
+  signatures after code or prompt changes.
 
-agentlog.end_session()
-```
+## API Shape
 
-### Tool & LLM Call Tracking
+The public surface is intentionally small:
 
-```python
-with agentlog.llm_call("gpt-4", prompt) as call:
-    response = api.chat(prompt)
-    call["tokens_in"] = response.usage.prompt_tokens
-    call["tokens_out"] = response.usage.completion_tokens
+| Function | Purpose |
+| --- | --- |
+| `breadcrumb(event, **ctx)` / `log(message, **ctx)` | Record a structured breadcrumb. |
+| `log_error(message, error, **ctx)` | Record an exception with traceback and context. |
+| `log_vars(*args, **vars)` | Capture compact value descriptors for runtime state. |
+| `capture_decision(decision_type, chosen, candidates=None, **ctx)` | Record why code selected one path over another. |
+| `capture_tool_call(name, input=None, output=None, error=None, **ctx)` | Capture tool/function behavior. |
+| `capture_llm_call(model, input=None, output=None, usage=None, error=None, **ctx)` | Capture model interaction summaries. |
+| `start_operation(name, **ctx)` / `end_operation(status="success", **ctx)` | Capture bounded operations. |
+| `start_session(name, task=None)` / `end_session()` | Correlate events into a handoff scope. |
+| `get_debug_context(token_budget=4000, incident_id=None, scope=None)` | Export token-budgeted, failure-prioritized context. |
+| `configure_redaction(...)` | Configure deny fields, allowlists, PII fields, and custom regexes. |
 
-with agentlog.tool_call("search_db", {"query": q}) as call:
-    results = search(q)
-    call["result"] = results
-```
+Additional modules for OpenTelemetry export, MCP formatting, file sinks,
+regression checks, and analytics are optional adapters around this core.
 
-### Always-On Failure Hook
+## Design Principles
 
-```python
-# Installed automatically when AGENTLOG=true
-# Captures locals at the crash point (bottom frame only)
-# Inline redaction of API keys, passwords, tokens
-# No manual instrumentation needed
-```
+- **Agent-first, not dashboard-first** - every captured event should help an
+  agent or engineer understand and patch a failure.
+- **Token-budgeted by default** - large payloads are summarized; low-cardinality
+  fields and causal breadcrumbs are preserved.
+- **Redaction is mandatory** - secrets and sensitive fields must be scrubbed
+  before context leaves the process.
+- **OTel-compatible, not OTel-replacing** - agentlog should correlate with
+  traces and logs, not become the trace store.
+- **Deterministic context assembly** - teams should be able to explain why a
+  bundle included or dropped each piece of context.
 
-## What It Captures
+## What agentlog Is Not
 
-| Event | What The Agent Learns |
-|-------|----------------------|
-| **Failure** | Exception type, message, locals at crash point (redacted) |
-| **LLM call** | Model, prompt, tokens in/out, duration |
-| **Tool call** | Tool name, arguments, success/failure, stdout/stderr |
-| **Session** | Agent name, task, git commit/branch/dirty state |
-| **Git diff** | What changed between agent turns (first 50 lines) |
+agentlog should not be positioned as:
 
-## `get_debug_context()` — The Killer Feature
+- a full observability platform
+- a metrics or trace backend
+- a log storage product
+- a vendor-specific APM clone
+- a prompt management system
+- a broad agent workflow framework
+- a promise that crashes are fixed automatically
 
-One function call exports everything an AI agent needs to debug a crash:
+Those claims are already served by larger tools and weaken the reason this
+library should exist.
 
-```python
-context = agentlog.get_debug_context(max_tokens=4000)
-```
+## When It Helps Most
 
-- **Errors first** — failures and session events prioritized
-- **Session-scoped** — only events from the current session
-- **Token-budgeted** — fits in an LLM context window
-- **Git context** — commit hash, branch, dirty state in header
-- **Token summary** — cumulative LLM usage in header
+- Python backend teams using coding agents for debugging and patching
+- AI-heavy services with tool calls, RAG/agent flows, routing decisions, retries,
+  and flaky failures
+- Internal platform teams building deterministic "handoff to agent" workflows
+- Services that already have logs/traces but lack compact, model-ready incident
+  context
 
 ## Value Descriptors
 
-Every value is described with a compact schema optimized for token efficiency:
+agentlog stores runtime values in compact descriptors instead of dumping full
+objects:
 
 ```json
-{"t":"str", "v":"Python"}
-{"t":"list", "n":100, "it":"dict", "preview":[{"id":1},{"id":2}]}
-{"t":"ndarray", "sh":"(768,)", "dt":"float32", "range":[0.0, 1.0]}
+{"t":"str","v":"Python"}
+{"t":"list","n":100,"it":"dict","preview":[{"id":1},{"id":2}]}
+{"t":"ndarray","sh":"(768,)","dt":"float32","range":[0.0,1.0]}
 ```
 
-~40% fewer tokens than human-readable logging.
+This preserves the facts an agent usually needs while keeping bundles small.
 
-## Design Constraints
+## Project Direction
 
-- **Zero dependencies** — Python stdlib only
-- **Zero cost when off** — all calls are no-ops when disabled
-- **No dashboards** — logs for machines, not humans
-- **Compact JSON** — short keys (`t`, `v`, `n`, `k`) for token efficiency
-- **Env var only** — `AGENTLOG=true`, no config files
+The v2 product should focus on three layers:
 
-## When agentlog Helps Most
+1. **Capture** - collect structured runtime facts at the moment they matter.
+2. **Compress** - convert noisy runtime state into concise, token-aware context.
+3. **Hand off** - export safe bundles for agents, humans, or existing platforms.
 
-- **Production crashes** — app fails when the agent isn't watching; locals are captured automatically
-- **Non-reproducible bugs** — fails 1 in 100 times; runtime state is always being recorded
-- **Long-running processes** — servers, workers, pipelines; historical state without print statements
-- **Complex data pipelines** — tensor shapes, dict keys, list lengths; structured not stringified
+Everything else belongs in adapters or optional modules.
 
-## API Reference
+See:
 
-### 🎯 Clear Winner Features (10X Improvements)
-
-| Function | Purpose |
-|----------|---------|
-| `fix_this_crash()` | **One-shot crash fixer** — detect pattern, generate fix, reduce iterations from 5→1 |
-| `visualize_agent_flow()` | **Multi-agent debugger** — show cascade: Agent A → Agent B → Error |
-| `validate_refactoring()` | **Regression validator** — opinionated safe/unsafe decision with confidence score |
-| `quick_validate()` | **Quick regression check** — returns "SAFE", "CAUTION", "REVIEW", or "UNSAFE" |
-
-### Core API
-
-| Function | Purpose |
-|----------|---------|
-| `enable()` / `disable()` | Toggle agentlog |
-| `start_session(agent, task)` | Start correlated session with git capture |
-| `end_session()` | End session |
-| `get_debug_context(max_tokens)` | Export failure-prioritized context for AI agents |
-| `get_context(max_tokens, tags)` | Export recent logs within token budget |
-| `summary()` | Compact session summary |
-| `token_summary()` | Aggregate LLM token usage |
-| `log(msg, **ctx)` | Log message with context |
-| `log_error(msg, error, **ctx)` | Log error with traceback |
-| `log_vars(*args)` | Log variable names, types, values |
-| `llm_call(model, prompt)` | Context manager for LLM calls |
-| `tool_call(name, args)` | Context manager for tool calls |
-| `to_file(path)` / `close_file()` | JSONL file sink |
-
-## Philosophy
-
-> AI agents are blind to runtime state. Tracebacks show *where* code failed,
-> not *why*. agentlog captures the *why* — automatically, passively, efficiently.
+- `docs/PRODUCT_VISION.md`
+- `docs/ARCHITECTURE.md`
+- `docs/MARKET_RESEARCH_2026_Q2.md`
+- `docs/QUICKSTART_RECIPES.md`
+- `docs/PRODUCTION_DEPLOYMENT_GUIDE.md`
+- `docs/API_REFERENCE.md`
 
 ## License
 
 MIT
-
----
-
-## 🤖 AI Coding Agents
-
-If you are an AI coding agent, read `.ai/README.md` before making changes.

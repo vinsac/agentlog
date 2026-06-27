@@ -256,7 +256,7 @@ def get_agent_performance(agent_name: Optional[str] = None, days: int = 30) -> D
     ]
     
     if not sessions:
-        return {"agent": agent_name or "all", "sessions": 0}
+        return {}
     
     by_agent = defaultdict(lambda: {"sessions": 0, "errors": 0, "successes": 0, "tokens": 0})
     

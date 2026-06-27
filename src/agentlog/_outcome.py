@@ -179,7 +179,7 @@ def get_outcome_stats() -> Dict[str, Any]:
     _load_outcomes()
     
     if not _outcomes:
-        return {"total": 0, "by_outcome": {}}
+        return {"total": 0, "by_outcome": {}, "success_rate": 0}
     
     by_outcome: Dict[str, int] = {}
     for outcome_data in _outcomes.values():

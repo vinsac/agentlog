@@ -49,7 +49,7 @@ def log_func(func=None, *, log_args=True, log_return=True, log_time=True):
                 bound = sig.bind(*args, **kwargs)
                 bound.apply_defaults()
                 return {
-                    k: describe(v) for k, v in bound.arguments.items()
+                    k: describe(v, field_name=k) for k, v in bound.arguments.items()
                     if k != "self"
                 }
             except Exception:
@@ -96,7 +96,7 @@ def log_func(func=None, *, log_args=True, log_return=True, log_time=True):
                 elapsed = round((time.monotonic() - t0) * 1000, 1)
                 exit_data: Dict[str, Any] = {"fn": fn_name, "ev": "exit"}
                 if log_return:
-                    exit_data["ret"] = describe(result)
+                    exit_data["ret"] = describe(result, field_name="return")
                 if log_time:
                     exit_data["ms"] = elapsed
                 _emit_func(exit_data, caller)
@@ -129,7 +129,7 @@ def log_func(func=None, *, log_args=True, log_return=True, log_time=True):
                 elapsed = round((time.monotonic() - t0) * 1000, 1)
                 exit_data: Dict[str, Any] = {"fn": fn_name, "ev": "exit"}
                 if log_return:
-                    exit_data["ret"] = describe(result)
+                    exit_data["ret"] = describe(result, field_name="return")
                 if log_time:
                     exit_data["ms"] = elapsed
                 _emit_func(exit_data, caller)

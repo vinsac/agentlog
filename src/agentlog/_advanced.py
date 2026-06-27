@@ -30,12 +30,12 @@ def log_decision(question: str, answer: Any, reason: str = "", **kwargs: Any) ->
         return
     data: Dict[str, Any] = {
         "question": question,
-        "answer": describe(answer),
+        "answer": describe(answer, field_name="answer"),
     }
     if reason:
         data["reason"] = reason
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     emit("decision", data)
 
 
@@ -52,10 +52,10 @@ def log_flow(pipeline: str, step: str, value: Any, **kwargs: Any) -> None:
     data: Dict[str, Any] = {
         "pipeline": pipeline,
         "step": step,
-        "value": describe(value),
+        "value": describe(value, field_name=step),
     }
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     emit("flow", data)
 
 
@@ -81,16 +81,22 @@ def log_diff(label: str, before: Any, after: Any) -> None:
     a = _to_dict(after)
     all_keys = set(list(b.keys()) + list(a.keys()))
 
-    added = {k: describe(a[k]) for k in all_keys if k not in b}
-    removed = {k: describe(b[k]) for k in all_keys if k not in a}
+    added = {k: describe(a[k], field_name=k) for k in all_keys if k not in b}
+    removed = {k: describe(b[k], field_name=k) for k in all_keys if k not in a}
     changed = {}
     for k in all_keys:
         if k in b and k in a:
             try:
                 if b[k] != a[k]:
-                    changed[k] = {"from": describe(b[k]), "to": describe(a[k])}
+                    changed[k] = {
+                        "from": describe(b[k], field_name=k),
+                        "to": describe(a[k], field_name=k),
+                    }
             except Exception:
-                changed[k] = {"from": describe(b[k]), "to": describe(a[k])}
+                changed[k] = {
+                    "from": describe(b[k], field_name=k),
+                    "to": describe(a[k], field_name=k),
+                }
 
     if not added and not removed and not changed:
         return  # no diff, no log
@@ -128,7 +134,7 @@ def log_query(
     if rows is not None:
         data["rows"] = rows
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     emit("query", data)
 
 
@@ -168,5 +174,5 @@ def log_perf(label: str = "", **kwargs: Any) -> None:
     data["pid"] = os.getpid()
 
     if kwargs:
-        data["ctx"] = {k: describe(v) for k, v in kwargs.items()}
+        data["ctx"] = {k: describe(v, field_name=k) for k, v in kwargs.items()}
     emit("perf", data)

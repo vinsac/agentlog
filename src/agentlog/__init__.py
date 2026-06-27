@@ -1,30 +1,26 @@
 """
-agentlog — Runtime observability for AI coding agents.
+agentlog - compact runtime context for coding agents.
 
-Structured, token-efficient logging that works in both development
-and production, designed specifically for AI agents to consume.
+Structured, token-efficient context capture that helps coding agents consume
+the runtime facts behind crashes, bad decisions, and flaky workflows.
 
     pip install agentlog
 
 Toggle:
-    AGENTLOG=true                # enable (recommended)
+    AGENTLOG=true                # enable
     AGENTLOG_LEVEL=info          # filter by level (debug/info/warn/error)
     DEVLOG=true                  # legacy toggle (also works)
 
 Usage:
-    from agentlog import log, log_vars, log_error, log_func, span
+    from agentlog import log, log_vars, log_error, get_debug_context
 
     log("Processing request", user_id=uid, skill_name=name)
     log_vars(confidence, embedding_vector, result_dict)
-
-    @log_func
-    async def create_skill(name: str) -> dict: ...
-
-    with span("normalize"):
-        result = normalize(raw_name)
+    context = get_debug_context(max_tokens=4000)
 
 Output:
-    [AGENTLOG:info] {"seq":1,"ts":1739512200,"at":"main.py:42 create_skill","msg":"Processing","ctx":{...}}
+    # agentlog debug context
+    {"tag":"info","msg":"Processing","ctx":{...}}
 
 Reference: https://github.com/vinsac/agentlog
 License: MIT
@@ -32,7 +28,7 @@ License: MIT
 
 import os
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 # Core configuration
 from ._core import (
@@ -60,6 +56,24 @@ from ._api import (
     log_http,
 )
 
+# Canonical v2 capture API
+from ._capture import (
+    breadcrumb,
+    start_operation,
+    end_operation,
+    operation,
+    capture_decision,
+    capture_tool_call,
+    capture_llm_call,
+)
+
+# Redaction policy API
+from ._redaction import (
+    configure_redaction,
+    reset_redaction,
+    redaction_summary,
+)
+
 # Function decorator
 from ._decorator import log_func
 
@@ -71,7 +85,7 @@ from ._trace import (
     span,
 )
 
-# Advanced observability
+# Additional structured event helpers
 from ._advanced import (
     log_decision,
     log_flow,
@@ -80,7 +94,7 @@ from ._advanced import (
     log_perf,
 )
 
-# Agent workflow optimization
+# LLM and tool-call context helpers
 from ._agent import (
     log_llm_call,
     log_tool_call,
@@ -253,20 +267,20 @@ from ._analytics import (
     clear_analytics,
 )
 
-# Clear Winner Feature 1: One-Shot Crash Fixer
+# Optional crash analysis helpers
 from ._fixer import (
     fix_this_crash,
     analyze_crash,
     analyze_and_validate_refactoring,
 )
 
-# Clear Winner Feature 2: Multi-Agent Flow Visualizer
+# Optional flow visualization helpers
 from ._flow import (
     visualize_agent_flow,
     get_cascade_summary,
 )
 
-# Clear Winner Feature 3: Regression Validator
+# Optional regression validation helpers
 from ._validate import (
     validate_refactoring,
     quick_validate,
@@ -316,6 +330,18 @@ __all__ = [
     "log_error",
     "log_check",
     "log_http",
+    # Canonical v2 capture API
+    "breadcrumb",
+    "start_operation",
+    "end_operation",
+    "operation",
+    "capture_decision",
+    "capture_tool_call",
+    "capture_llm_call",
+    # Redaction policy API
+    "configure_redaction",
+    "reset_redaction",
+    "redaction_summary",
     # Decorator
     "log_func",
     # Tracing
@@ -420,14 +446,14 @@ __all__ = [
     "generate_team_report",
     "export_analytics",
     "clear_analytics",
-    # One-Shot Crash Fixer ⭐
+    # Crash analysis helpers
     "fix_this_crash",
     "analyze_crash",
     "analyze_and_validate_refactoring",
-    # Multi-Agent Flow Visualizer 🌊
+    # Flow visualization helpers
     "visualize_agent_flow",
     "get_cascade_summary",
-    # Regression Validator ✅
+    # Regression validation helpers
     "validate_refactoring",
     "quick_validate",
     # Agent workflow
