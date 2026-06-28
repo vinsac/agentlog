@@ -39,6 +39,36 @@ agentlog should answer:
 
 That is a real product distinction.
 
+## Runtime Context Objection
+
+The common objection is: "the runtime can already give the agent context, so why
+use agentlog?"
+
+The answer is that the runtime has facts, not a handoff artifact. Raw runtime
+context is usually too large, too unsafe, too unstructured, or too poorly scoped
+for a coding agent.
+
+agentlog is not a new source of truth. It is a context compiler for debugging
+agents:
+
+> Runtimes know everything; coding agents need the smallest safe subset.
+> agentlog is the adapter between those two worlds.
+
+The value is:
+
+- selection: choose the exception, stack, locals, breadcrumbs, decisions, tool
+  calls, LLM calls, IDs, and git metadata that matter
+- compression: turn runtime values into compact descriptors instead of raw
+  object dumps
+- redaction: scrub secrets and PII before context leaves the process
+- determinism: make repeated exports stable and explain selected/dropped events
+- handoff: produce one artifact for Codex, Claude Code, Cursor, an internal
+  agent, or a human reviewer
+
+If a runtime already provides a safe, compact, deterministic, redacted incident
+bundle for coding agents, agentlog is unnecessary there. Most runtimes and
+observability tools do not optimize for that exact artifact.
+
 ## ICP
 
 The best early users are narrow:

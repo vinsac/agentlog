@@ -12,14 +12,16 @@ Set these once in your shell or project env:
 
 ```bash
 export AGENTLOG=true
-export AGENTLOG_FILE=.agentlog/sessions.jsonl
+export AGENTLOG_INCIDENT_STORE=.agentlog/incidents.jsonl
+export AGENTLOG_INCIDENT_STORE_MAX_BYTES=52428800
 export AGENTLOG_BUFFER_SIZE=2000
 ```
 
 Why this helps:
 
 - `AGENTLOG=true` enables logging and failure capture
-- `AGENTLOG_FILE` stores replayable JSONL traces
+- `AGENTLOG_INCIDENT_STORE` stores durable incident events for later export
+- `AGENTLOG_INCIDENT_STORE_MAX_BYTES` rotates the JSONL store before it grows without bound
 - `AGENTLOG_BUFFER_SIZE` tunes context budget for long tasks
 
 ---
@@ -32,6 +34,7 @@ import agentlog
 agentlog.enable()
 
 def handle_request(request_id: str) -> dict:
+    incident_id = f"inc_{request_id}"
     agentlog.start_session("api-service", f"request {request_id}")
     try:
         # ... your business logic ...
@@ -39,8 +42,8 @@ def handle_request(request_id: str) -> dict:
         agentlog.tag_outcome("success", 1.0)
         return result
     except Exception as exc:
-        agentlog.log_error("request failed", exc, request_id=request_id)
-        context = agentlog.get_debug_context(max_tokens=4000)
+        agentlog.log_error("request failed", exc, request_id=request_id, incident_id=incident_id)
+        context = agentlog.get_debug_context(max_tokens=4000, incident_id=incident_id)
         attach_to_incident_or_agent_task(context)
         agentlog.tag_outcome("failure", 1.0, str(exc))
         raise
@@ -48,7 +51,45 @@ def handle_request(request_id: str) -> dict:
         agentlog.end_session()
 ```
 
-## 2) Generic worker/pipeline quickstart
+Durable handoff after the process exits:
+
+```bash
+agentlog incidents export inc_req_123 --tokens 4000 --format markdown
+agentlog incidents export --latest --scope request_id=req_123 --format json
+```
+
+## 2) Bad decision reconstruction
+
+```python
+import agentlog
+
+def route_payment(request_id: str, features: dict) -> str:
+    candidates = [
+        {"route": "approve", "score": features["approval_score"]},
+        {"route": "manual_review", "score": features["risk_score"]},
+    ]
+    chosen = "manual_review"
+
+    agentlog.capture_decision(
+        "payment_route",
+        chosen,
+        candidates=candidates,
+        threshold=0.7,
+        reason="risk score exceeded review threshold",
+        request_id=request_id,
+        incident_id=f"inc_{request_id}",
+    )
+
+    return chosen
+```
+
+When the route is wrong, export:
+
+```bash
+agentlog incidents export inc_req_123 --scope request_id=req_123 --format markdown
+```
+
+## 3) Generic worker/pipeline quickstart
 
 ```python
 import agentlog
@@ -61,8 +102,12 @@ try:
     agentlog.log("batch_complete", items_processed=1000)
     agentlog.tag_outcome("success", 0.95)
 except Exception as exc:
-    agentlog.log_error("pipeline failure", exc)
-    replay_ready_context = agentlog.get_debug_context(max_tokens=3000)
+    agentlog.capture_tool_call("nightly_loader", error=exc, incident_id="inc_nightly_pipeline")
+    agentlog.log_error("pipeline failure", exc, incident_id="inc_nightly_pipeline")
+    replay_ready_context = agentlog.get_debug_context(
+        max_tokens=3000,
+        incident_id="inc_nightly_pipeline",
+    )
     print(replay_ready_context)
     agentlog.tag_outcome("failure", 1.0, str(exc))
     raise
@@ -70,7 +115,7 @@ finally:
     agentlog.end_session()
 ```
 
-## 3) Generic CI quickstart
+## 4) Generic CI quickstart
 
 ```python
 import agentlog
@@ -88,7 +133,7 @@ agentlog.end_session()
 
 ---
 
-## 4) Editor overlays (optional)
+## 5) Editor overlays (optional)
 
 ### Cursor quickstart
 

@@ -29,6 +29,25 @@ payload summaries, already redacted and sized for a context window.
 
 That artifact is `get_debug_context()`.
 
+## Why Not Just Give the Runtime Context to the Agent?
+
+The runtime has the facts, but it usually has them in the wrong shape for an
+agent: too much raw log volume, too little causal context, unsafe payloads,
+missing incident boundaries, and no token budget.
+
+agentlog is not a new source of truth. It is a context compiler:
+
+> Runtimes know everything; coding agents need the smallest safe subset.
+> agentlog is the adapter between those two worlds.
+
+Use agentlog when you want runtime facts turned into a handoff artifact that is:
+
+- selected for debugging rather than exhaustive replay
+- compressed into compact value descriptors
+- redacted before it leaves the process
+- scoped by incident, session, request, or correlation ID
+- deterministic and explainable under a token budget
+
 ## Quick Start
 
 ```bash
@@ -188,6 +207,7 @@ Everything else belongs in adapters or optional modules.
 See:
 
 - `docs/PRODUCT_VISION.md`
+- `docs/HOW_TO_USE_AGENTLOG.md`
 - `docs/ARCHITECTURE.md`
 - `docs/COMPETITIVE_POSITIONING.md`
 - `docs/MARKET_RESEARCH_2026_Q2.md`
