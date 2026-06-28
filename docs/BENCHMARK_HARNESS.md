@@ -23,11 +23,11 @@ For each run, it:
 - starts a session
 - triggers a controlled crash
 - captures structured failure context
-- calls `fix_this_crash()`
-- validates the suggested fix with scenario-specific checks
+- exports a bounded debug bundle
+- validates whether the bundle contains the scenario-specific facts needed for diagnosis
 - records:
   - `iterations_to_fix`
-  - `time_to_fix_ms`
+  - `time_to_first_useful_context_ms`
   - `first_try_success`
 
 ## Run

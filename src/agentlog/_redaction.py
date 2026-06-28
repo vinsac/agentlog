@@ -125,6 +125,48 @@ def sanitize(value: Any, field_name: Optional[str] = None) -> Any:
     return value
 
 
+def sanitize_event(value: Any, field_name: Optional[str] = None) -> Any:
+    """Sanitize emitted event data while preserving value-descriptor shape."""
+    if isinstance(value, dict):
+        if _is_value_descriptor(value):
+            return _sanitize_descriptor(value, field_name)
+        return {str(k): sanitize_event(v, str(k)) for k, v in value.items()}
+    if _field_is_blocked(field_name):
+        return "***REDACTED_FIELD***"
+    if isinstance(value, str):
+        return redact_string(value, field_name)
+    if isinstance(value, list):
+        return [sanitize_event(v, field_name) for v in value]
+    if isinstance(value, tuple):
+        return [sanitize_event(v, field_name) for v in value]
+    return value
+
+
+def _sanitize_descriptor(descriptor: Dict[str, Any], field_name: Optional[str]) -> Dict[str, Any]:
+    sanitized: Dict[str, Any] = {}
+    blocked = _field_is_blocked(field_name)
+    for key, value in descriptor.items():
+        if blocked and key in {"v", "preview", "range"}:
+            sanitized[str(key)] = "***REDACTED_FIELD***"
+        else:
+            sanitized[str(key)] = _sanitize_descriptor_value(value)
+    return sanitized
+
+
+def _sanitize_descriptor_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(k): _sanitize_descriptor_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sanitize_descriptor_value(v) for v in value]
+    if isinstance(value, str):
+        return redact_string(value)
+    return value
+
+
+def _is_value_descriptor(value: Dict[str, Any]) -> bool:
+    return "t" in value and any(key in value for key in ("v", "n", "k", "sh", "dt", "preview"))
+
+
 def redaction_summary() -> Dict[str, Any]:
     """Return non-sensitive policy metadata for debug-context headers."""
     return {

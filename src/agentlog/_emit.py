@@ -15,7 +15,7 @@ import threading
 from typing import Any, Dict, Optional
 
 from ._core import should_emit, get_tag_prefix
-from ._redaction import _field_is_blocked, redact_string
+from ._redaction import sanitize_event
 
 
 # ---------------------------------------------------------------------------
@@ -168,7 +168,7 @@ def emit(tag: str, data: Dict[str, Any], depth: int = 3) -> None:
     if _span_stack:
         entry["span"] = _span_stack[-1]
 
-    entry.update(_sanitize_for_emit(data))
+    entry.update(sanitize_event(data))
 
     prefix = get_tag_prefix()
     line = f"[{prefix}:{tag}] {json.dumps(entry, default=str, separators=(',', ':'))}"
@@ -194,38 +194,3 @@ def emit(tag: str, data: Dict[str, Any], depth: int = 3) -> None:
         persist_entry({"tag": tag, **entry})
     except Exception:
         pass
-
-
-def _sanitize_for_emit(value: Any, field_name: Optional[str] = None) -> Any:
-    """Sanitize raw emitted fields without corrupting value descriptors."""
-    if isinstance(value, dict):
-        if _is_descriptor(value):
-            return {str(k): _sanitize_descriptor_value(v) for k, v in value.items()}
-        sanitized = {}
-        for k, v in value.items():
-            key = str(k)
-            sanitized[key] = _sanitize_for_emit(v, key)
-        return sanitized
-    if field_name and _field_is_blocked(field_name):
-        return "***REDACTED_FIELD***"
-    if isinstance(value, list):
-        return [_sanitize_for_emit(item, field_name) for item in value]
-    if isinstance(value, tuple):
-        return [_sanitize_for_emit(item, field_name) for item in value]
-    if isinstance(value, str):
-        return redact_string(value, field_name)
-    return value
-
-
-def _sanitize_descriptor_value(value: Any) -> Any:
-    if isinstance(value, dict):
-        return {str(k): _sanitize_descriptor_value(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_sanitize_descriptor_value(item) for item in value]
-    if isinstance(value, str):
-        return redact_string(value)
-    return value
-
-
-def _is_descriptor(value: Dict[str, Any]) -> bool:
-    return "t" in value and any(key in value for key in ("v", "n", "k", "sh", "dt", "preview"))

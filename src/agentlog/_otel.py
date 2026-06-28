@@ -40,10 +40,13 @@ def _convert_to_otel_attributes(entry: Dict[str, Any]) -> Dict[str, Any]:
             attrs["code.function"] = entry["fn"]
     
     elif tag == "llm":
+        attrs["gen_ai.operation.name"] = entry.get("operation", "chat")
         if "model" in entry:
             attrs["llm.model"] = entry["model"]
             attrs["gen_ai.request.model"] = entry["model"]
             attrs["gen_ai.response.model"] = entry["model"]
+        if "call_id" in entry:
+            attrs["gen_ai.response.id"] = entry["call_id"]
         if "tokens_in" in entry:
             attrs["llm.tokens.input"] = entry["tokens_in"]
             attrs["gen_ai.usage.input_tokens"] = entry["tokens_in"]
@@ -54,9 +57,12 @@ def _convert_to_otel_attributes(entry: Dict[str, Any]) -> Dict[str, Any]:
             attrs["llm.duration_ms"] = entry["ms"]
     
     elif tag == "tool":
+        attrs["gen_ai.operation.name"] = "execute_tool"
         if "tool" in entry:
             attrs["tool.name"] = entry["tool"]
             attrs["gen_ai.tool.name"] = entry["tool"]
+        if "call_id" in entry:
+            attrs["gen_ai.tool.call.id"] = entry["call_id"]
         if "success" in entry:
             attrs["tool.success"] = entry["success"]
         if "ms" in entry:

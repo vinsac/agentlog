@@ -184,7 +184,8 @@ bundle = agentlog.export_debug_bundle(
 ```
 
 JSON exports include `schema_version`, `incident_id`, `session_id`,
-`token_budget`, `event_count`, and `context`.
+`token_budget`, `event_count`, `filtered_count`, `selected_count`,
+`dropped_count`, `filters`, `selection`, and `context`.
 
 ### CLI
 
@@ -192,6 +193,8 @@ JSON exports include `schema_version`, `incident_id`, `session_id`,
 agentlog incidents list --store .agentlog/incidents.jsonl
 agentlog incidents inspect inc_123 --store .agentlog/incidents.jsonl
 agentlog incidents export inc_123 --tokens 4000 --format markdown
+agentlog incidents export --latest --scope request_id=req_91d2 --format json
+agentlog incidents export --session-id sess_abc --format markdown --out bundles/debug.md
 ```
 
 ### Bundle Schema

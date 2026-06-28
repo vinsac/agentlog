@@ -9,10 +9,10 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List, Optional
 
-from ._context import assemble_debug_context
-from ._redaction import sanitize
+from ._context import assemble_debug_context_with_metadata
+from ._redaction import sanitize_event
 
 
 DEFAULT_STORE_PATH = ".agentlog/incidents.jsonl"
@@ -32,7 +32,7 @@ class JsonlIncidentStore:
         path = Path(self.path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(sanitize(entry), default=str, separators=(",", ":")) + "\n")
+            handle.write(json.dumps(sanitize_event(entry), default=str, separators=(",", ":")) + "\n")
 
     def read_entries(
         self,
@@ -160,7 +160,7 @@ def export_debug_bundle(
 ) -> str:
     """Export a versioned debug bundle from stored incident entries."""
     entries = load_incident_entries(incident_id, session_id=session_id, path=path)
-    context = assemble_debug_context(
+    assembled = assemble_debug_context_with_metadata(
         entries,
         max_tokens=token_budget,
         session_id=session_id,
@@ -175,7 +175,12 @@ def export_debug_bundle(
         "session_id": session_id,
         "token_budget": token_budget,
         "event_count": len(entries),
-        "context": context,
+        "filtered_count": assembled["filtered_count"],
+        "selected_count": assembled["selected_count"],
+        "dropped_count": assembled["dropped_count"],
+        "filters": assembled["filters"],
+        "selection": assembled["selection"],
+        "context": assembled["context"],
     }
 
     if format == "json":
@@ -187,12 +192,14 @@ def export_debug_bundle(
             f"- schema: `{BUNDLE_SCHEMA_VERSION}`\n"
             f"- scope: `{title}`\n"
             f"- events: `{len(entries)}`\n"
+            f"- selected: `{assembled['selected_count']}`\n"
+            f"- dropped: `{assembled['dropped_count']}`\n"
             f"- token budget: `{token_budget}`\n\n"
             "```jsonl\n"
-            f"{context}\n"
+            f"{assembled['context']}\n"
             "```\n"
         )
-    return context
+    return assembled["context"]
 
 
 def _entry_has_value(entry: Dict[str, Any], key: str, value: Any) -> bool:

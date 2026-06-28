@@ -1,0 +1,50 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: tests py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+      - name: Run tests
+        run: python -m pytest
+
+  package:
+    name: build and install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+      - name: Install built wheel in a clean venv
+        run: |
+          python -m venv /tmp/agentlog-install
+          /tmp/agentlog-install/bin/python -m pip install --upgrade pip
+          /tmp/agentlog-install/bin/python -m pip install dist/*.whl
+          /tmp/agentlog-install/bin/python - <<'PY'
+          import agentlog
+          print(agentlog.__version__)
+          PY
+          /tmp/agentlog-install/bin/agentlog incidents list

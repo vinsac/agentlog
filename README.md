@@ -82,6 +82,7 @@ Then export a bounded handoff bundle:
 ```bash
 agentlog incidents list
 agentlog incidents export inc_123 --tokens 4000 --format markdown
+agentlog incidents export --latest --scope request_id=req_91d2 --format json
 ```
 
 ## Core Use Cases

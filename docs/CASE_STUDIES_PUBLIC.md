@@ -17,7 +17,7 @@ These case studies use the same metric shape from `docs/SUCCESS_METRICS.md`.
 | Regression catch before merge | 62% | 93% | **1.5x** |
 
 **What changed**
-- Enabled automatic failure capture + `fix_this_crash()`
+- Enabled automatic failure capture + durable debug bundle export
 - Added baseline check with `validate_refactoring()`
 
 ---

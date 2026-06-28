@@ -38,8 +38,31 @@ def assemble_debug_context(
         include_metadata: Include redaction/budget metadata in the header.
         explain: Include selection and drop reasons in the header.
     """
+    return assemble_debug_context_with_metadata(
+        entries,
+        max_tokens=max_tokens,
+        session_id=session_id,
+        incident_id=incident_id,
+        scope=scope,
+        include_metadata=include_metadata,
+        explain=explain,
+    )["context"]
+
+
+def assemble_debug_context_with_metadata(
+    entries: Iterable[Dict[str, Any]],
+    *,
+    max_tokens: int = 4000,
+    session_id: Optional[str] = None,
+    incident_id: Optional[str] = None,
+    scope: Optional[Dict[str, Any]] = None,
+    include_metadata: bool = False,
+    explain: bool = False,
+) -> Dict[str, Any]:
+    """Build a stable debug bundle plus machine-readable selection metadata."""
+    input_entries = list(entries)
     filtered, filter_notes = filter_entries(
-        list(entries),
+        input_entries,
         session_id=session_id,
         incident_id=incident_id,
         scope=scope,
@@ -70,7 +93,15 @@ def assemble_debug_context(
     parts = [header]
     if selected:
         parts.append("\n".join(_to_json_line(entry) for entry in selected))
-    return "\n".join(parts)
+    return {
+        "context": "\n".join(parts),
+        "input_count": len(input_entries),
+        "filtered_count": len(filtered),
+        "selected_count": len(selected),
+        "dropped_count": len(selection["dropped"]),
+        "filters": filter_notes,
+        "selection": selection,
+    }
 
 
 def filter_entries(

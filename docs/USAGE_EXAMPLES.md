@@ -261,11 +261,8 @@ def handle_error(error):
         path=request.path
     )
     
-    # Get fix suggestion (for logged errors)
-    code, explanation = agentlog.fix_this_crash()
-    
-    # In production, you might send this to your error tracking
-    # service along with the fix suggestion
+    # Export a bounded handoff bundle for the engineer or coding agent.
+    debug_context = agentlog.get_debug_context(max_tokens=4000)
     
     raise error
 ```
@@ -280,7 +277,8 @@ Add to `.windsurfrules`:
 
 ```
 When AgentLog is enabled (AGENTLOG=true):
-- Use agentlog.fix_this_crash() after any exception
+- Use agentlog.get_debug_context() after any exception
+- Export durable bundles with `agentlog incidents export`
 - Check agentlog.get_cascade_summary() when debugging multi-file issues
 - Validate refactors with agentlog.quick_validate() before completing
 ```
@@ -364,9 +362,6 @@ def get_ai_debug_info(max_tokens=4000):
     
     # Get failure-prioritized context
     context = agentlog.get_debug_context(max_tokens=max_tokens)
-    
-    # Get fix suggestion if there's an error
-    fix_code, fix_explanation = agentlog.fix_this_crash()
     
     # Check for multi-agent issues
     cascade = agentlog.get_cascade_summary()
@@ -466,8 +461,8 @@ def attempt_auto_recovery():
         
         return fix
     
-    # Fall back to general fix suggestion
-    return agentlog.fix_this_crash()[0]
+    # Fall back to a bounded handoff bundle.
+    return agentlog.get_debug_context(max_tokens=4000)
 ```
 
 ---
