@@ -19,20 +19,40 @@ DEFAULT_STORE_PATH = ".agentlog/incidents.jsonl"
 BUNDLE_SCHEMA_VERSION = "agentlog.debug_bundle.v1"
 
 _store_path: Optional[str] = None
+_store_max_bytes: Optional[int] = None
 _store_lock = threading.Lock()
 
 
 class JsonlIncidentStore:
     """Append-only JSONL incident store."""
 
-    def __init__(self, path: str = DEFAULT_STORE_PATH):
+    def __init__(self, path: str = DEFAULT_STORE_PATH, *, max_bytes: Optional[int] = None):
         self.path = path
+        self.max_bytes = max_bytes
 
     def append(self, entry: Dict[str, Any]) -> None:
         path = Path(self.path)
         path.parent.mkdir(parents=True, exist_ok=True)
+        line = json.dumps(sanitize_event(entry), default=str, separators=(",", ":")) + "\n"
+        self._rotate_if_needed(len(line.encode("utf-8")))
         with open(path, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(sanitize_event(entry), default=str, separators=(",", ":")) + "\n")
+            handle.write(line)
+
+    def _rotate_if_needed(self, next_bytes: int) -> None:
+        if not self.max_bytes or self.max_bytes <= 0:
+            return
+        path = Path(self.path)
+        if not path.exists():
+            return
+        if path.stat().st_size + next_bytes <= self.max_bytes:
+            return
+        rotated = path.with_name(path.name + ".1")
+        try:
+            if rotated.exists():
+                rotated.unlink()
+            path.replace(rotated)
+        except OSError:
+            pass
 
     def read_entries(
         self,
@@ -97,23 +117,30 @@ class JsonlIncidentStore:
         )[:limit]
 
 
-def configure_incident_store(path: str = DEFAULT_STORE_PATH) -> str:
+def configure_incident_store(path: str = DEFAULT_STORE_PATH, *, max_bytes: Optional[int] = None) -> str:
     """Enable durable incident storage and return the active path."""
-    global _store_path
+    global _store_path, _store_max_bytes
     _store_path = path
+    _store_max_bytes = max_bytes
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def disable_incident_store() -> None:
     """Disable automatic durable incident storage."""
-    global _store_path
+    global _store_path, _store_max_bytes
     _store_path = None
+    _store_max_bytes = None
 
 
 def get_incident_store_path() -> Optional[str]:
     """Return the active durable incident-store path, if configured."""
     return _store_path
+
+
+def get_incident_store_max_bytes() -> Optional[int]:
+    """Return the active incident-store rotation size, if configured."""
+    return _store_max_bytes
 
 
 def persist_entry(entry: Dict[str, Any]) -> None:
@@ -122,7 +149,7 @@ def persist_entry(entry: Dict[str, Any]) -> None:
         return
     with _store_lock:
         try:
-            JsonlIncidentStore(_store_path).append(entry)
+            JsonlIncidentStore(_store_path, max_bytes=_store_max_bytes).append(entry)
         except Exception:
             pass
 

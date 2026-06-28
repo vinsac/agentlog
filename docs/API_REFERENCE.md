@@ -145,14 +145,18 @@ engineer later.
 Enable durable JSONL incident storage.
 
 ```python
-agentlog.configure_incident_store(".agentlog/incidents.jsonl")
+agentlog.configure_incident_store(".agentlog/incidents.jsonl", max_bytes=52_428_800)
 ```
 
 The same path can also be enabled with:
 
 ```bash
 export AGENTLOG_INCIDENT_STORE=.agentlog/incidents.jsonl
+export AGENTLOG_INCIDENT_STORE_MAX_BYTES=52428800
 ```
+
+When `max_bytes` is set, the active JSONL file rotates to `<path>.1` before
+the next append would exceed the configured size.
 
 ### list_incidents()
 

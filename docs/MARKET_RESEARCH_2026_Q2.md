@@ -87,6 +87,10 @@ optimize for the artifact handed to a coding agent during debugging:
 
 The output should be deterministic, compact, and inspectable.
 
+See `docs/COMPETITIVE_POSITIONING.md` for the sharper platform comparison,
+why adjacent observability products do not fully solve agent handoff, and what
+moat agentlog can realistically build.
+
 ## ICP
 
 Best initial ICP:

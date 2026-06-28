@@ -35,6 +35,7 @@ That artifact is `get_debug_context()`.
 pip install agentlog
 export AGENTLOG=true
 export AGENTLOG_INCIDENT_STORE=.agentlog/incidents.jsonl
+export AGENTLOG_INCIDENT_STORE_MAX_BYTES=52428800
 ```
 
 ```python
@@ -72,7 +73,7 @@ For incidents that need to survive process exit, use the durable JSONL store:
 ```python
 import agentlog
 
-agentlog.configure_incident_store(".agentlog/incidents.jsonl")
+agentlog.configure_incident_store(".agentlog/incidents.jsonl", max_bytes=52_428_800)
 agentlog.capture_decision("route_payment", "manual_review", incident_id="inc_123")
 agentlog.log_error("authorization failed", error, incident_id="inc_123")
 ```
@@ -188,6 +189,7 @@ See:
 
 - `docs/PRODUCT_VISION.md`
 - `docs/ARCHITECTURE.md`
+- `docs/COMPETITIVE_POSITIONING.md`
 - `docs/MARKET_RESEARCH_2026_Q2.md`
 - `docs/QUICKSTART_RECIPES.md`
 - `docs/PRODUCTION_DEPLOYMENT_GUIDE.md`

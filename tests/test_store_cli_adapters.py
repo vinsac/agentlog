@@ -58,6 +58,18 @@ def test_incident_store_preserves_redacted_descriptor_shape(tmp_path):
     assert entry["input"]["v"]["api_key"] == "***REDACTED_FIELD***"
 
 
+def test_incident_store_rotates_when_max_bytes_exceeded(tmp_path):
+    path = tmp_path / "incidents.jsonl"
+    agentlog.configure_incident_store(str(path), max_bytes=260)
+
+    agentlog.breadcrumb("first", incident_id="inc_rotate", payload="x" * 120)
+    agentlog.breadcrumb("second", incident_id="inc_rotate", payload="y" * 120)
+
+    assert path.exists()
+    assert path.with_name(path.name + ".1").exists()
+    assert agentlog.get_incident_store_max_bytes() == 260
+
+
 def test_cli_lists_and_exports_incidents(tmp_path, capsys):
     path = tmp_path / "incidents.jsonl"
     agentlog.configure_incident_store(str(path))

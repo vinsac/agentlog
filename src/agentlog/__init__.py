@@ -152,6 +152,7 @@ from ._store import (
     BUNDLE_SCHEMA_VERSION,
     configure_incident_store,
     disable_incident_store,
+    get_incident_store_max_bytes,
     get_incident_store_path,
     list_incidents,
     load_incident_entries,
@@ -316,7 +317,9 @@ def _bootstrap_from_env() -> None:
     store_path = os.getenv("AGENTLOG_INCIDENT_STORE", "").strip()
     if store_path:
         try:
-            configure_incident_store(store_path)
+            max_bytes_raw = os.getenv("AGENTLOG_INCIDENT_STORE_MAX_BYTES", "").strip()
+            max_bytes = int(max_bytes_raw) if max_bytes_raw else None
+            configure_incident_store(store_path, max_bytes=max_bytes)
         except Exception:
             pass
 
@@ -393,6 +396,7 @@ __all__ = [
     "BUNDLE_SCHEMA_VERSION",
     "configure_incident_store",
     "disable_incident_store",
+    "get_incident_store_max_bytes",
     "get_incident_store_path",
     "list_incidents",
     "load_incident_entries",
