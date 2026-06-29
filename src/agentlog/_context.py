@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from ._priority import get_entry_priority
 from ._redaction import redaction_summary
-from ._tokens import estimate_tokens, estimate_tokens_dict
+from ._tokens import estimate_tokens
 
 
 HIGH_PRIORITY_TAGS = {"error", "session", "decision", "tool", "llm", "operation"}
@@ -25,6 +25,7 @@ def assemble_debug_context(
     scope: Optional[Dict[str, Any]] = None,
     include_metadata: bool = False,
     explain: bool = False,
+    schema_style: str = "readable",
 ) -> str:
     """
     Build a stable, token-budgeted debug bundle.
@@ -37,6 +38,7 @@ def assemble_debug_context(
         scope: Optional exact-match filters such as {"request_id": "req_1"}.
         include_metadata: Include redaction/budget metadata in the header.
         explain: Include selection and drop reasons in the header.
+        schema_style: "readable" expands abbreviated event/descriptor fields for agents.
     """
     return assemble_debug_context_with_metadata(
         entries,
@@ -46,6 +48,7 @@ def assemble_debug_context(
         scope=scope,
         include_metadata=include_metadata,
         explain=explain,
+        schema_style=schema_style,
     )["context"]
 
 
@@ -58,8 +61,11 @@ def assemble_debug_context_with_metadata(
     scope: Optional[Dict[str, Any]] = None,
     include_metadata: bool = False,
     explain: bool = False,
+    schema_style: str = "readable",
 ) -> Dict[str, Any]:
     """Build a stable debug bundle plus machine-readable selection metadata."""
+    if schema_style not in {"readable", "compact"}:
+        raise ValueError("schema_style must be 'readable' or 'compact'")
     input_entries = list(entries)
     filtered, filter_notes = filter_entries(
         input_entries,
@@ -77,7 +83,12 @@ def assemble_debug_context_with_metadata(
         filter_notes=filter_notes,
     )
 
-    selected, selection = select_entries(filtered, max_tokens=max_tokens, header=header)
+    selected, selection = select_entries(
+        filtered,
+        max_tokens=max_tokens,
+        header=header,
+        schema_style=schema_style,
+    )
 
     if include_metadata or explain:
         header = _build_header(
@@ -92,9 +103,10 @@ def assemble_debug_context_with_metadata(
 
     parts = [header]
     if selected:
-        parts.append("\n".join(_to_json_line(entry) for entry in selected))
+        parts.append("\n".join(_to_json_line(entry, schema_style=schema_style) for entry in selected))
     return {
         "context": "\n".join(parts),
+        "schema_style": schema_style,
         "input_count": len(input_entries),
         "filtered_count": len(filtered),
         "selected_count": len(selected),
@@ -139,6 +151,7 @@ def select_entries(
     *,
     max_tokens: int,
     header: str,
+    schema_style: str = "compact",
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Select entries by priority, recency, and token budget.
@@ -163,7 +176,7 @@ def select_entries(
     spent = 0
 
     for entry in candidates:
-        tokens = estimate_tokens_dict(entry)
+        tokens = estimate_tokens(_to_json_line(entry, schema_style=schema_style))
         if tokens <= remaining - spent:
             selected.append(entry)
             spent += tokens
@@ -302,5 +315,76 @@ def _entry_has_value(entry: Dict[str, Any], key: str, value: Any) -> bool:
     return False
 
 
-def _to_json_line(entry: Dict[str, Any]) -> str:
+_READABLE_ENTRY_KEYS = {
+    "seq": "sequence",
+    "ts": "timestamp",
+    "at": "call_site",
+    "tag": "event_type",
+    "ctx": "context",
+    "err": "error_type",
+    "err_msg": "error_message",
+    "tb": "traceback",
+    "fn": "function",
+    "ev": "event_phase",
+    "ms": "duration_ms",
+    "ret": "return_value",
+    "vars": "variables",
+    "args": "arguments",
+    "n": "length",
+    "k": "keys",
+    "it": "item_type",
+    "sh": "shape",
+    "dt": "dtype",
+}
+
+_READABLE_DESCRIPTOR_KEYS = {
+    "t": "type",
+    "v": "value",
+    "n": "length",
+    "k": "keys",
+    "it": "item_type",
+    "sh": "shape",
+    "dt": "dtype",
+    "cols": "columns",
+}
+
+_READABLE_EVENT_TYPES = {
+    "vars": "variables",
+    "func": "function",
+}
+
+
+def _to_json_line(entry: Dict[str, Any], *, schema_style: str = "compact") -> str:
+    if schema_style == "readable":
+        entry = _readable_event(entry)
     return json.dumps(entry, default=str, separators=(",", ":"))
+
+
+def _readable_event(entry: Dict[str, Any]) -> Dict[str, Any]:
+    readable: Dict[str, Any] = {}
+    for key, value in entry.items():
+        readable_key = _READABLE_ENTRY_KEYS.get(key, key)
+        if key == "tag":
+            value = _READABLE_EVENT_TYPES.get(str(value), value)
+        readable[readable_key] = _readable_value(value)
+    return readable
+
+
+def _readable_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        if _is_value_descriptor(value):
+            return {
+                _READABLE_DESCRIPTOR_KEYS.get(key, key): _readable_value(nested)
+                for key, nested in value.items()
+            }
+        return {
+            _READABLE_ENTRY_KEYS.get(str(key), str(key)): _readable_value(nested)
+            for key, nested in value.items()
+        }
+    if isinstance(value, list):
+        return [_readable_value(item) for item in value]
+    return value
+
+
+def _is_value_descriptor(value: Dict[str, Any]) -> bool:
+    return "t" in value and any(key in value for key in ("v", "n", "k", "sh", "dt", "preview"))

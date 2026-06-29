@@ -184,6 +184,7 @@ def export_debug_bundle(
     format: str = "text",
     include_metadata: bool = True,
     explain: bool = True,
+    schema_style: str = "readable",
 ) -> str:
     """Export a versioned debug bundle from stored incident entries."""
     entries = load_incident_entries(incident_id, session_id=session_id, path=path)
@@ -195,12 +196,14 @@ def export_debug_bundle(
         scope=scope,
         include_metadata=include_metadata,
         explain=explain,
+        schema_style=schema_style,
     )
     bundle = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
         "incident_id": incident_id,
         "session_id": session_id,
         "token_budget": token_budget,
+        "schema_style": assembled["schema_style"],
         "event_count": len(entries),
         "filtered_count": assembled["filtered_count"],
         "selected_count": assembled["selected_count"],
@@ -222,6 +225,7 @@ def export_debug_bundle(
             f"- selected: `{assembled['selected_count']}`\n"
             f"- dropped: `{assembled['dropped_count']}`\n"
             f"- token budget: `{token_budget}`\n\n"
+            f"- schema style: `{assembled['schema_style']}`\n\n"
             "```jsonl\n"
             f"{assembled['context']}\n"
             "```\n"

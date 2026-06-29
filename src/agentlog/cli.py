@@ -32,6 +32,12 @@ def main(argv: Optional[list] = None) -> int:
     export_parser.add_argument("--latest", action="store_true", help="Export the most recent incident.")
     export_parser.add_argument("--tokens", type=int, default=4000)
     export_parser.add_argument("--format", choices=["text", "json", "markdown"], default="text")
+    export_parser.add_argument(
+        "--schema-style",
+        choices=["readable", "compact"],
+        default="readable",
+        help="Use readable agent-facing field names or compact legacy keys.",
+    )
     export_parser.add_argument("--session-id")
     export_parser.add_argument(
         "--scope",
@@ -89,6 +95,7 @@ def main(argv: Optional[list] = None) -> int:
             format=args.format,
             include_metadata=not args.no_metadata,
             explain=not args.no_explain,
+            schema_style=args.schema_style,
         )
         if args.out:
             dirpath = os.path.dirname(args.out)

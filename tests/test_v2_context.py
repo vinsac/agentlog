@@ -65,9 +65,38 @@ def test_v2_capture_and_incident_filtering():
     assert "# redaction:" in context
     assert "# filter: incident_id=inc_keep" in context
     assert len(lines) == 1
-    assert lines[0]["tag"] == "decision"
+    assert lines[0]["event_type"] == "decision"
     assert lines[0]["incident_id"] == "inc_keep"
+    assert lines[0]["chosen"]["type"] == "str"
+    assert lines[0]["chosen"]["value"] == "manual_review"
     assert "validate_payment" not in context
+
+
+def test_debug_context_can_export_compact_schema():
+    agentlog.capture_decision("route_payment", "approve", incident_id="inc_compact")
+
+    context = agentlog.get_debug_context(
+        token_budget=1200,
+        incident_id="inc_compact",
+        schema_style="compact",
+    )
+    lines = _json_lines(context)
+
+    assert lines[0]["tag"] == "decision"
+    assert lines[0]["chosen"]["t"] == "str"
+    assert lines[0]["chosen"]["v"] == "approve"
+
+
+def test_debug_context_expands_common_abbreviations_for_agents():
+    agentlog.log_vars(confidence=0.91, request_id="req_123")
+
+    context = agentlog.get_debug_context(token_budget=1200)
+    lines = _json_lines(context)
+
+    assert lines[0]["event_type"] == "variables"
+    assert lines[0]["variables"]["confidence"]["type"] == "float"
+    assert lines[0]["variables"]["confidence"]["value"] == 0.91
+    assert lines[0]["variables"]["request_id"]["type"] == "str"
 
 
 def test_explain_mode_reports_budget_drops():

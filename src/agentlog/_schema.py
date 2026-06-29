@@ -311,6 +311,7 @@ def get_debug_bundle_schema() -> Dict[str, Any]:
         "required": [
             "schema_version",
             "token_budget",
+            "schema_style",
             "event_count",
             "filtered_count",
             "selected_count",
@@ -322,6 +323,7 @@ def get_debug_bundle_schema() -> Dict[str, Any]:
             "incident_id": {"type": ["string", "null"]},
             "session_id": {"type": ["string", "null"]},
             "token_budget": {"type": "integer", "minimum": 1},
+            "schema_style": {"enum": ["readable", "compact"]},
             "event_count": {"type": "integer", "minimum": 0},
             "filtered_count": {"type": "integer", "minimum": 0},
             "selected_count": {"type": "integer", "minimum": 0},

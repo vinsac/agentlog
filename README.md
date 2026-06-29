@@ -77,10 +77,10 @@ Example output:
 # git: main@2c53442 dirty
 # tokens: 230 total (gpt-4: 150in/80out)
 
-{"tag":"error","err":"ValueError","err_msg":"Confidence 1.5 out of valid range [0, 1]",
- "ctx":{"request_id":{"t":"str","v":"req_91d2"}}}
-{"tag":"vars","vars":{"confidence":{"t":"float","v":1.5},"threshold":{"t":"float","v":0.7}}}
-{"tag":"tool","tool":"validate_rating","args":{"confidence":{"t":"float","v":1.5}},"success":true}
+{"event_type":"error","error_type":"ValueError","error_message":"Confidence 1.5 out of valid range [0, 1]",
+ "context":{"request_id":{"type":"str","value":"req_91d2"}}}
+{"event_type":"variables","variables":{"confidence":{"type":"float","value":1.5},"threshold":{"type":"float","value":0.7}}}
+{"event_type":"tool","tool":"validate_rating","arguments":{"confidence":{"type":"float","value":1.5}},"success":true}
 ```
 
 Give that bundle to Codex, Claude Code, Cursor, an internal repair agent, or a
@@ -181,10 +181,10 @@ library should exist.
 - Services that already have logs/traces but lack compact, model-ready incident
   context
 
-## Value Descriptors
+## Agent-Readable Versus Compact Descriptors
 
-agentlog stores runtime values in compact descriptors instead of dumping full
-objects:
+agentlog stores runtime values internally as compact descriptors instead of
+dumping full objects:
 
 ```json
 {"t":"str","v":"Python"}
@@ -192,7 +192,17 @@ objects:
 {"t":"ndarray","sh":"(768,)","dt":"float32","range":[0.0,1.0]}
 ```
 
-This preserves the facts an agent usually needs while keeping bundles small.
+But `get_debug_context()` and `agentlog incidents export` default to readable
+agent-facing descriptors:
+
+```json
+{"type":"str","value":"Python"}
+{"type":"list","length":100,"item_type":"dict","preview":[{"id":1},{"id":2}]}
+{"type":"ndarray","shape":"(768,)","dtype":"float32","range":[0.0,1.0]}
+```
+
+Use `schema_style="compact"` or `--schema-style compact` only when you need the
+legacy abbreviated JSONL shape.
 
 ## Project Direction
 

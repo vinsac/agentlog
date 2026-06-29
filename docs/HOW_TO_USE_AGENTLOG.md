@@ -136,3 +136,26 @@ The bundle includes:
 
 The goal is not exhaustive replay. The goal is the smallest safe subset that
 helps the coding agent diagnose and patch the issue.
+
+## Readable By Default
+
+agentlog keeps stored events compact, but exported debug bundles use readable
+field names by default. For example, stored descriptors such as:
+
+```json
+{"t":"str","v":"req_123"}
+```
+
+are exported to agents as:
+
+```json
+{"type":"str","value":"req_123"}
+```
+
+The same applies to event fields: `ctx` becomes `context`, `err_msg` becomes
+`error_message`, `tb` becomes `traceback`, and `args` becomes `arguments`.
+
+This is deliberate. Coding agents perform better when context looks like a clear
+docstring or handoff note rather than an internal compression format. Use
+`schema_style="compact"` or `agentlog incidents export --schema-style compact`
+only when compact legacy JSONL matters more than readability.

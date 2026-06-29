@@ -33,10 +33,12 @@ def test_incident_store_persists_and_exports_bundle(tmp_path):
     )
     parsed = json.loads(bundle)
     assert parsed["schema_version"] == agentlog.BUNDLE_SCHEMA_VERSION
+    assert parsed["schema_style"] == "readable"
     assert parsed["event_count"] == 2
     assert parsed["selected_count"] == 2
     assert parsed["dropped_count"] == 0
-    assert '"tag":"decision"' in parsed["context"]
+    assert '"event_type":"decision"' in parsed["context"]
+    assert '"error_message":"secret ***BEARER_TOKEN***"' in parsed["context"]
     assert "Bearer abcdefghijklmnop" not in parsed["context"]
     assert "***BEARER_TOKEN***" in parsed["context"]
 
@@ -171,6 +173,24 @@ def test_cli_export_creates_output_parent_directory(tmp_path):
 
     assert output.exists()
     assert "write me" in output.read_text()
+
+
+def test_export_debug_bundle_supports_compact_schema_style(tmp_path):
+    path = tmp_path / "incidents.jsonl"
+    agentlog.configure_incident_store(str(path))
+    agentlog.breadcrumb("compact me", incident_id="inc_compact", request_id="req_1")
+
+    bundle = agentlog.export_debug_bundle(
+        incident_id="inc_compact",
+        path=str(path),
+        format="json",
+        schema_style="compact",
+    )
+    parsed = json.loads(bundle)
+
+    assert parsed["schema_style"] == "compact"
+    assert '"tag":"info"' in parsed["context"]
+    assert '"event_type"' not in parsed["context"]
 
 
 def test_stdlib_logging_handler_captures_errors():

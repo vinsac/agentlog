@@ -112,11 +112,15 @@ context = agentlog.get_debug_context(
     incident_id=incident_id,
     include_metadata=True,
     explain=True,
+    schema_style="readable",
 )
 ```
 
 Returns a string ready to attach to an agent task or incident note. The bundle
 prioritizes errors, session metadata, token usage, and recent relevant events.
+Readable schema style is the default and expands compact internal fields like
+`ctx`, `err_msg`, `t`, and `v` into `context`, `error_message`, `type`, and
+`value`. Use `schema_style="compact"` for legacy abbreviated JSONL output.
 
 ### configure_redaction()
 
@@ -184,6 +188,7 @@ bundle = agentlog.export_debug_bundle(
     path=".agentlog/incidents.jsonl",
     token_budget=4000,
     format="markdown",  # "text", "json", or "markdown"
+    schema_style="readable",
 )
 ```
 
@@ -199,6 +204,7 @@ agentlog incidents inspect inc_123 --store .agentlog/incidents.jsonl
 agentlog incidents export inc_123 --tokens 4000 --format markdown
 agentlog incidents export --latest --scope request_id=req_91d2 --format json
 agentlog incidents export --session-id sess_abc --format markdown --out bundles/debug.md
+agentlog incidents export inc_123 --schema-style compact
 ```
 
 ### Bundle Schema

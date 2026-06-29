@@ -233,6 +233,7 @@ def get_debug_context(
     scope: Optional[Dict[str, Any]] = None,
     include_metadata: bool = False,
     explain: bool = False,
+    schema_style: str = "readable",
 ) -> str:
     """
     Export a failure-prioritized debug context for AI agents.
@@ -249,6 +250,7 @@ def get_debug_context(
         scope: Optional exact-match filters such as {"request_id": "req_1"}.
         include_metadata: Include redaction and budget metadata.
         explain: Include selection/drop reasons.
+        schema_style: "readable" for agent-facing field names, or "compact" for legacy keys.
 
     Returns:
         A string ready to paste into an AI agent's context window.
@@ -267,4 +269,5 @@ def get_debug_context(
         scope=scope,
         include_metadata=include_metadata,
         explain=explain,
+        schema_style=schema_style,
     )
